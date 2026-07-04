@@ -9,6 +9,17 @@ Zuverlaessigkeits-Check und Auto-Reparatur.
 > gehoeren nicht in das GitHub-Repo. Fuer ein Komplettpaket mit Modellen gibt es
 > das Full-Download-Skript.
 
+## Download
+
+- Code: https://github.com/Barkin1997/J.A.R.V.I.S
+- Modelle spaeter hier: https://github.com/Barkin1997/J.A.R.V.I.S/releases
+- Modelle automatisch installieren: `INSTALL_MODELS_FROM_GITHUB.bat`
+
+Du musst nicht alles laden. Das GitHub-Repo ist der kleine Code-Download.
+Die sehr grossen Downloads sind nur fuer lokale KI-Modelle, KI-Bild und
+KI-Video. Wer nur Jarvis testen will, startet mit dem Code und laedt Modelle
+erst nach Bedarf nach.
+
 ## Funktionen
 
 - Lokaler Chatbot mit Ollama-Modellen
