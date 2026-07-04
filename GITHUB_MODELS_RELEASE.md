@@ -43,9 +43,15 @@ Wenn alles hochgeladen ist, auf GitHub die Release pruefen und veroeffentlichen.
 
 ## Nutzer installieren Full-Paket
 
-1. Alle `.tar.part` Dateien aus der Release herunterladen.
-2. In einen Ordner legen.
-3. Restore ausfuehren:
+Sobald die Release veroeffentlicht ist, koennen Nutzer die Modellteile
+automatisch laden:
+
+```powershell
+cd "C:\JARVIS"
+python tools\download_full_release_assets.py --out "C:\JARVIS_MODEL_PARTS"
+```
+
+Danach wiederherstellen:
 
 ```powershell
 python tools\restore_full_release_package.py ^
@@ -55,3 +61,6 @@ python tools\restore_full_release_package.py ^
 
 Danach kann der Nutzer die Ordner aus `C:\Jarvis_FULL_WITH_MODELS` in seinen
 Jarvis-Ordner kopieren.
+
+Eine einfache Nutzer-Anleitung steht in `INSTALLATION_DE.md` und
+`INSTALLATION_EN.md`.

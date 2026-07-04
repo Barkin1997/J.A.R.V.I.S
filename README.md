@@ -74,6 +74,13 @@ Wenn die Modelle direkt ueber GitHub verteilt werden sollen, nutze
 `GITHUB_MODELS_RELEASE.md`. Dort ist der Release-Upload als gesplittete Assets
 vorbereitet.
 
+## Fuer Nutzer
+
+- Deutsche Anleitung: `INSTALLATION_DE.md`
+- English guide: `INSTALLATION_EN.md`
+- Modell-Download: `MODEL_DOWNLOAD_INFO.md`
+- GitHub-Release fuer Modelle: `GITHUB_MODELS_RELEASE.md`
+
 Fuer GitHub selbst besser:
 
 ```powershell
