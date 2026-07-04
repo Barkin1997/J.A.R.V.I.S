@@ -29,6 +29,10 @@ Then paste the public download link here:
 FULL_MODEL_DOWNLOAD_URL=PASTE_LINK_HERE
 ```
 
+For GitHub Releases, see `GITHUB_MODELS_RELEASE.md`. It contains the prepared
+upload and restore scripts for splitting the full package into release assets
+under GitHub's file-size limit.
+
 ## Install idea for users
 
 1. Download the GitHub source code.

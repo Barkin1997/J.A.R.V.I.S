@@ -70,6 +70,10 @@ persoenliche Arbeitsprojekte.
 Mehr dazu steht in `MODEL_DOWNLOAD_INFO.md`. Das GitHub-Repo bleibt klein und
 sauber; das grosse Modellpaket wird separat als Download verlinkt.
 
+Wenn die Modelle direkt ueber GitHub verteilt werden sollen, nutze
+`GITHUB_MODELS_RELEASE.md`. Dort ist der Release-Upload als gesplittete Assets
+vorbereitet.
+
 Fuer GitHub selbst besser:
 
 ```powershell
