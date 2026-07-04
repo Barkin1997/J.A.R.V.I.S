@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>JARVIS Video Fortschritt</title>
+<style>
+:root{--bg:#050b10;--panel:#07131b;--line:#123241;--cyan:#35d7ff;--orange:#ff9b21;--green:#46f5a3;--red:#ff5b5b;--text:#d9f7ff;--muted:#7ba2b4}
+*{box-sizing:border-box}
+body{margin:0;min-height:100vh;background:radial-gradient(circle at 50% 0,#0b2430 0,#050b10 44%,#020507 100%);color:var(--text);font-family:Segoe UI,Arial,sans-serif}
+.wrap{width:min(1180px,calc(100vw - 36px));margin:0 auto;padding:28px 0 34px}
+.top{display:flex;align-items:flex-end;justify-content:space-between;gap:18px;border-bottom:1px solid var(--line);padding-bottom:18px}
+h1{margin:0;font-size:28px;letter-spacing:0;font-weight:900;color:var(--cyan);text-shadow:0 0 18px rgba(53,215,255,.45)}
+.stamp{color:var(--muted);font-size:13px}
+.panel{margin-top:20px;background:rgba(7,19,27,.82);border:1px solid var(--line);box-shadow:0 0 34px rgba(53,215,255,.08);padding:22px}
+.state{font-size:24px;font-weight:950;color:var(--orange);text-transform:uppercase}
+.state.done{color:var(--green)}.state.error{color:var(--red)}.state.running{color:var(--cyan)}
+.bar{height:34px;border:1px solid #1d5165;background:#031017;overflow:hidden;margin:18px 0 10px;position:relative}
+.fill{height:100%;width:0;background:linear-gradient(90deg,var(--cyan),var(--orange));box-shadow:0 0 22px rgba(255,155,33,.55);transition:width .35s ease}
+.pct{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-weight:900;color:#061015;text-shadow:0 1px 0 rgba(255,255,255,.28)}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-top:16px}
+pre{margin:0;white-space:pre-wrap;word-break:break-word;min-height:260px;max-height:62vh;overflow:auto;color:#ccefff;font:14px/1.5 Consolas,monospace;background:#03090d;border:1px solid #123241;padding:16px}
+.hint{color:var(--muted);font-size:14px;line-height:1.5}
+@media(max-width:800px){.grid{grid-template-columns:1fr}.top{align-items:flex-start;flex-direction:column}.wrap{width:min(100vw - 20px,1180px);padding-top:18px}}
+</style>
+</head>
+<body>
+<main class="wrap">
+  <div class="top">
+    <div>
+      <h1>JARVIS KI-Video Fortschritt</h1>
+      <div class="hint">Automatische Anzeige fuer Queue, Renderstatus, Fortschritt und fertige Datei.</div>
+    </div>
+    <div class="stamp" id="stamp">warte...</div>
+  </div>
+
+  <section class="panel">
+    <div class="state" id="state">idle</div>
+    <div class="bar" aria-label="Video Fortschritt">
+      <div class="fill" id="fill"></div>
+      <div class="pct" id="pct">--</div>
+    </div>
+    <div class="grid">
+      <pre id="text">Noch kein Status geladen.</pre>
+      <div class="hint">
+        <b>Befehle in Jarvis</b><br>
+        Jarvis, KI Video Ladebalken<br>
+        Jarvis, Video Dashboard<br>
+        Jarvis, ist KI Video fertig<br>
+        Jarvis, KI Video fertigstellen
+      </div>
+    </div>
+  </section>
+</main>
+<script>
+const API = `${location.origin}/api/video_progress`;
+function setText(id, value){document.getElementById(id).textContent = value ?? ''}
+function render(data){
+  const state = data.state || 'idle';
+  const percent = Number.isFinite(data.percent) ? data.percent : null;
+  const fill = document.getElementById('fill');
+  const stateEl = document.getElementById('state');
+  stateEl.textContent = state;
+  stateEl.className = `state ${state}`;
+  fill.style.width = `${percent ?? 0}%`;
+  setText('pct', percent === null ? 'warte auf ComfyUI Fortschritt' : `${percent}%`);
+  setText('text', data.text || 'Noch kein Status.');
+  const t = data.updated_at ? new Date(data.updated_at * 1000) : new Date();
+  setText('stamp', `aktualisiert ${t.toLocaleTimeString()}`);
+}
+async function poll(){
+  try{
+    const res = await fetch(API, {cache:'no-store'});
+    render(await res.json());
+  }catch(err){
+    render({state:'error', percent:null, text:`API nicht erreichbar: ${err}`});
+  }
+}
+poll();
+setInterval(poll, 3000);
+</script>
+</body>
+</html>

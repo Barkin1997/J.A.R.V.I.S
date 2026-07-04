@@ -1,0 +1,9 @@
+{
+  "note": "Game-Asset-Modus Vorlage.",
+  "workflow_type": "Game Asset",
+  "recommended": {
+    "positive_prompt": "game asset, isolated, transparent background style, high detail, orange black sci-fi",
+    "negative_prompt": "real photo, watermark, bad anatomy, blurry",
+    "use_case": "Icons, Items, Charaktere, UI-Elemente"
+  }
+}

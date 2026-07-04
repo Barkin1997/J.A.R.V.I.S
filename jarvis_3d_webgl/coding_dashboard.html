@@ -1,0 +1,107 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>JARVIS Coding Dashboard</title>
+<style>
+:root{--bg:#05080d;--panel:#0b1420;--line:#266c8f;--cyan:#67d8ff;--orange:#ff9a28;--green:#38ffb0;--red:#ff5b5b;--text:#edfaff}
+*{box-sizing:border-box}
+html,body{margin:0;min-height:100%;background:#05080d;color:var(--text);font-family:"Segoe UI",Arial,sans-serif}
+body{padding:24px}
+.shell{max-width:1300px;margin:0 auto}
+.top{display:flex;justify-content:space-between;gap:18px;align-items:flex-start;margin-bottom:18px}
+h1{margin:0;font-size:30px;letter-spacing:0}
+.sub{color:#9fc5d9;margin-top:6px;font-weight:700;word-break:break-word}
+.pill{border:1px solid rgba(103,216,255,.35);border-radius:6px;padding:10px 14px;background:rgba(5,16,26,.86);font-weight:900;color:#bdefff}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.wide{grid-column:1/-1}
+.card{border:1px solid rgba(103,216,255,.25);border-radius:8px;background:linear-gradient(180deg,rgba(10,22,34,.93),rgba(4,10,17,.96));padding:16px;box-shadow:0 0 28px rgba(103,216,255,.06)}
+.label{font-size:12px;color:#88b0c5;font-weight:950;margin-bottom:8px;text-transform:uppercase}
+.state{font-size:22px;font-weight:950;color:var(--orange)}
+.state.done{color:var(--green)}.state.error,.state.timeout{color:var(--red)}
+pre{white-space:pre-wrap;word-break:break-word;margin:0;max-height:420px;overflow:auto;font-family:Consolas,"Cascadia Mono",monospace;font-size:12px;line-height:1.5;color:#d9f4ff}
+ul{margin:0;padding-left:18px;color:#d9f4ff}
+li{margin:5px 0;word-break:break-word}
+@media(max-width:900px){body{padding:14px}.grid{grid-template-columns:1fr}.top{display:block}.pill{display:inline-block;margin-top:12px}}
+</style>
+</head>
+<body>
+<main class="shell">
+  <div class="top">
+    <div>
+      <h1>JARVIS CODING DASHBOARD</h1>
+      <div class="sub" id="task">Noch kein Coding-Auftrag.</div>
+    </div>
+    <div class="pill" id="model">Modell</div>
+  </div>
+  <div class="grid">
+    <section class="card">
+      <div class="label">Status</div>
+      <div class="state" id="state">idle</div>
+      <div class="sub" id="root"></div>
+    </section>
+    <section class="card">
+      <div class="label">Dateien</div>
+      <ul id="files"><li>Noch keine Änderungen.</li></ul>
+    </section>
+    <section class="card wide">
+      <div class="label">Bereitschaft</div>
+      <pre id="readiness"></pre>
+    </section>
+    <section class="card">
+      <div class="label">Tests</div>
+      <pre id="tests"></pre>
+    </section>
+    <section class="card">
+      <div class="label">Backup / Logs</div>
+      <pre id="logs"></pre>
+    </section>
+    <section class="card wide">
+      <div class="label">Diff</div>
+      <pre id="diff"></pre>
+    </section>
+    <section class="card wide">
+      <div class="label">Zusammenfassung</div>
+      <pre id="summary"></pre>
+    </section>
+  </div>
+</main>
+<script>
+const API_BASE = location.protocol === 'file:' ? 'http://127.0.0.1:8765' : '';
+function text(id, value){document.getElementById(id).textContent = value || '';}
+function renderFiles(files){
+  const box = document.getElementById('files');
+  box.innerHTML = '';
+  if(!files || !files.length){box.innerHTML = '<li>Noch keine Änderungen.</li>'; return;}
+  for(const file of files){
+    const li = document.createElement('li');
+    li.textContent = file;
+    box.appendChild(li);
+  }
+}
+async function poll(){
+  try{
+    const res = await fetch(`${API_BASE}/api/coding_dashboard`);
+    const data = await res.json();
+    text('task', data.task || 'Noch kein Coding-Auftrag.');
+    text('model', data.model || 'Modell');
+    text('root', data.root || '');
+    const state = document.getElementById('state');
+    state.textContent = data.state || 'idle';
+    state.className = 'state ' + (data.state || 'idle');
+    text('readiness', data.readiness || '');
+    text('tests', data.tests || 'Noch keine Tests.');
+    text('logs', [`Backup: ${data.backup_file || '-'}`, `Live: ${data.live_file || '-'}`, `Log: ${data.log_file || '-'}`, data.preview || '', data.rollback || ''].filter(Boolean).join('\n'));
+    text('diff', data.diff || 'Noch kein Diff.');
+    text('summary', data.summary || '');
+    renderFiles(data.changed_files || []);
+  }catch(err){
+    text('summary', 'Dashboard nicht erreichbar: ' + err);
+  }
+  setTimeout(poll, 1000);
+}
+poll();
+</script>
+</body>
+</html>

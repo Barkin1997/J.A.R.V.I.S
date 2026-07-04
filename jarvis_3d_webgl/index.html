@@ -1,0 +1,1375 @@
+﻿<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>JARVIS 3D HUMANOID</title>
+<style>
+:root{
+  --bg:#02050a;
+  --line-soft:rgba(124,202,255,.32);
+  --orange:#ff9a28;
+  --amber:#ffd36d;
+  --cyan:#6dd7ff;
+  --green:#31ffae;
+}
+*{box-sizing:border-box}
+html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#01040a;color:#ecf8ff;font-family:"Segoe UI",Arial,sans-serif}
+body{background:linear-gradient(180deg,#02070f 0%,#06101a 48%,#010204 100%)}
+#stage{position:fixed;inset:0;width:100vw;height:100vh;display:block}
+.hud{position:fixed;inset:0;pointer-events:none;background:
+  radial-gradient(ellipse at 50% 48%,rgba(60,190,255,.08),transparent 38%),
+  linear-gradient(90deg,rgba(109,215,255,.08),transparent 22%,transparent 78%,rgba(255,154,40,.08)),
+  linear-gradient(180deg,rgba(255,255,255,.018),transparent 18%,rgba(0,0,0,.2))}
+.scan{display:none}
+.brand{position:absolute;top:24px;left:34px;width:360px}
+.brand .mark{font-size:32px;font-weight:700;color:#f5fbff;text-shadow:0 0 20px rgba(109,215,255,.45)}
+.brand .rail{margin-top:10px;height:2px;width:310px;background:linear-gradient(90deg,var(--orange),rgba(109,215,255,.6),transparent);box-shadow:0 0 18px rgba(255,154,40,.45)}
+.brand .sub{margin-top:10px;color:#89a9bd;font-size:12px;font-weight:600}
+.topRight{position:absolute;top:24px;right:34px;display:flex;align-items:center;gap:10px;pointer-events:auto}
+.chip{min-width:122px;height:34px;border:1px solid rgba(124,202,255,.34);background:rgba(3,11,20,.62);display:flex;align-items:center;justify-content:center;color:#cceeff;font-size:12px;font-weight:700;border-radius:6px;box-shadow:inset 0 0 16px rgba(109,215,255,.06)}
+.chip strong{color:var(--green);margin-left:6px}
+.closeBtn{width:34px;height:34px;border:1px solid rgba(124,202,255,.32);background:rgba(3,11,20,.42);color:rgba(180,232,255,.82);border-radius:2px;font-size:22px;line-height:28px;cursor:pointer;box-shadow:inset 0 0 14px rgba(109,215,255,.05),0 0 16px rgba(109,215,255,.08);font-weight:300}
+.closeBtn:hover{border-color:rgba(255,154,40,.42);background:rgba(255,154,40,.08);color:#ffd9a3;box-shadow:0 0 18px rgba(255,154,40,.12)}
+.panel{position:absolute;bottom:104px;width:360px;min-height:190px;padding:18px 20px;border:1px solid var(--line-soft);background:linear-gradient(180deg,rgba(6,16,29,.88),rgba(3,8,15,.9));clip-path:polygon(0 14px,14px 0,100% 0,100% calc(100% - 14px),calc(100% - 14px) 100%,0 100%);box-shadow:0 0 22px rgba(109,215,255,.06),inset 0 0 22px rgba(255,154,40,.03)}
+.panel.left{left:28px;top:92px;bottom:92px;width:min(680px,46vw);min-height:0;display:flex;flex-direction:column;gap:10px;pointer-events:auto}.panel.right{display:none}
+.panel h2{margin:0;color:#e9f8ff;font-size:13px;font-weight:800}
+.panelHead{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.panelActions{display:flex;align-items:center;gap:6px}
+.iconBtn{width:30px;height:30px;border:1px solid rgba(124,202,255,.28);background:rgba(4,13,22,.58);color:#cceeff;border-radius:4px;cursor:pointer;font-size:15px;font-weight:800}
+.iconBtn:hover{border-color:rgba(255,154,40,.5);color:#ffd36d}
+.chatSearch{width:100%;height:36px;border:1px solid rgba(124,202,255,.28);background:rgba(2,9,18,.7);color:#ecf8ff;border-radius:5px;outline:0;padding:0 10px;font-size:13px;font-weight:700}
+.chatSearch::placeholder{color:#6f8da0}
+.chatList{height:108px;overflow:auto;border:1px solid rgba(124,202,255,.16);background:rgba(1,8,15,.36);border-radius:6px;padding:6px}
+.chatItem{width:100%;border:0;border-bottom:1px solid rgba(124,202,255,.1);background:transparent;color:#cdefff;text-align:left;padding:7px 8px;cursor:pointer;border-radius:4px}
+.chatItem:hover,.chatItem.active{background:rgba(109,215,255,.09);box-shadow:inset 2px 0 0 rgba(255,154,40,.72)}
+.chatTitle{display:block;font-size:13px;font-weight:900;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.chatItem.active .chatTitle::after{content:" AKTIV";float:right;color:#31ffae;font-size:10px;font-weight:950;text-shadow:0 0 12px rgba(49,255,174,.5)}
+.chatMeta{display:block;margin-top:3px;color:#84a5b8;font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.chatDetail{flex:1;min-height:260px;overflow:auto;border:1px solid rgba(255,154,40,.14);background:rgba(1,8,15,.34);border-radius:6px;padding:12px}
+.msg{margin:0 0 10px;padding:10px 12px;border-left:3px solid rgba(124,202,255,.35);background:rgba(109,215,255,.055);color:#dff6ff;font-size:14px;line-height:1.5;border-radius:4px;white-space:pre-wrap;word-break:break-word}
+.msg.assistant{border-left-color:rgba(255,154,40,.65);background:rgba(255,154,40,.055);color:#ffe0b3}
+.msgRole{display:block;margin-bottom:5px;font-size:11px;font-weight:900;color:#8fb2c4}
+.msg.assistant .msgRole{color:#ffc06d}
+.console{font-family:Consolas,"Cascadia Mono",monospace;font-size:13px;line-height:1.45;color:#bfe4f5;min-height:118px;max-height:168px;overflow:auto;border:1px solid rgba(124,202,255,.18);background:rgba(1,8,15,.42);border-radius:6px;padding:10px 12px;opacity:.9;box-shadow:inset 0 0 18px rgba(109,215,255,.035)}
+.console div{white-space:normal;overflow:visible;text-overflow:clip;word-break:break-word;margin-bottom:5px}
+.console .tag{color:var(--amber);font-weight:800}
+.row{display:grid;grid-template-columns:72px 1fr 58px;gap:10px;align-items:center;margin:12px 0;color:#b8cfdd;font-size:12px;font-weight:700}
+.meter{height:5px;background:rgba(124,202,255,.14);overflow:hidden;border-radius:4px}
+.meter span{display:block;height:100%;width:78%;background:linear-gradient(90deg,var(--cyan),var(--orange));box-shadow:0 0 14px rgba(255,154,40,.55)}
+.stateLine{position:absolute;left:50%;bottom:94px;transform:translateX(-50%);height:38px;min-width:250px;padding:0 22px;display:flex;align-items:center;justify-content:center;border:1px solid rgba(49,255,174,.32);background:rgba(2,12,13,.5);color:var(--green);font-size:13px;font-weight:900;border-radius:6px;text-shadow:0 0 18px rgba(49,255,174,.55);box-shadow:0 0 22px rgba(49,255,174,.1)}
+.workLine{position:absolute;left:50%;bottom:138px;transform:translateX(-50%);width:min(760px,72vw);min-height:34px;padding:8px 18px;display:flex;align-items:center;justify-content:center;border:1px solid rgba(124,202,255,.28);background:rgba(2,9,17,.58);color:#cdefff;font-size:12px;font-weight:800;border-radius:6px;text-align:center;text-shadow:0 0 14px rgba(109,215,255,.35);box-shadow:0 0 20px rgba(109,215,255,.08);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.command{position:absolute;left:50%;bottom:28px;transform:translateX(-50%);width:min(1280px,88vw);height:62px;padding:0 12px 0 18px;display:flex;align-items:center;gap:12px;border:1px solid rgba(124,202,255,.52);background:linear-gradient(90deg,rgba(4,12,24,.86),rgba(10,17,25,.82));clip-path:polygon(0 16px,16px 0,100% 0,100% calc(100% - 16px),calc(100% - 16px) 100%,0 100%);pointer-events:auto;box-shadow:0 0 30px rgba(109,215,255,.1),0 0 24px rgba(255,154,40,.08)}
+#cmd{min-width:0;flex:1;border:0;outline:0;background:transparent;color:#fff;font-size:16px;padding:12px 0}
+#cmd::placeholder{color:#768d9d}
+#send{height:42px;border:0;border-radius:6px;padding:0 20px;background:linear-gradient(180deg,#ffd36d,#f07f13);color:#05070a;font-weight:900;cursor:pointer}
+#send:hover{filter:brightness(1.08)}
+.dropOverlay{position:fixed;inset:28px;z-index:10;display:none;align-items:center;justify-content:center;border:2px dashed rgba(103,216,255,.72);background:rgba(2,10,18,.9);color:#e9fbff;text-align:center;pointer-events:none;box-shadow:0 0 30px rgba(103,216,255,.14),inset 0 0 24px rgba(255,154,40,.05)}
+.dropOverlay.show{display:flex}
+.dropBox{max-width:640px;padding:28px;border:1px solid rgba(255,154,40,.38);background:rgba(4,13,22,.72);border-radius:8px}
+.dropTitle{font-size:28px;font-weight:950;color:#ffd36d;margin-bottom:10px}
+.dropText{font-size:15px;font-weight:800;color:#bfeeff;line-height:1.5}
+body[data-phase="thinking"] .stateLine{border-color:rgba(255,211,109,.45);color:var(--amber)}
+body[data-phase="coding"] .stateLine,body[data-phase="web"] .stateLine,body[data-phase="terminal"] .stateLine,body[data-phase="reading"] .stateLine{border-color:rgba(255,154,40,.58);color:#ffd36d}
+body[data-phase="coding"] .workLine,body[data-phase="web"] .workLine,body[data-phase="terminal"] .workLine,body[data-phase="reading"] .workLine{border-color:rgba(255,154,40,.38);color:#ffd9a3;box-shadow:0 0 24px rgba(255,154,40,.12)}
+body[data-phase="speaking"] .stateLine{border-color:rgba(255,154,40,.58);color:#ffd2a0}
+body[data-phase="listening"] .stateLine{border-color:rgba(109,215,255,.5);color:#aeeaff}
+@media (max-width:980px){
+  .brand{top:18px;left:18px;width:250px}.brand .mark{font-size:26px}.brand .rail{width:210px}
+  .topRight{top:18px;right:18px}.chip{display:none}
+  .panel{width:min(620px,52vw);bottom:112px;padding:14px 15px}
+  .panel.left{left:18px;top:88px;width:min(620px,52vw);min-height:190px}.panel.right{display:none}
+  .chatList{height:92px}
+  .chatDetail{min-height:240px}
+  .console{min-height:104px;max-height:140px;font-size:12px}
+  .command{width:calc(100vw - 36px);bottom:24px}
+  .workLine{width:calc(100vw - 36px);bottom:136px}
+}
+@media (max-width:720px){
+  .panel{display:none}
+  .stateLine{bottom:94px;min-width:220px}
+  .workLine{bottom:136px;width:calc(100vw - 32px)}
+}
+</style>
+</head>
+<body data-phase="idle">
+<canvas id="stage"></canvas>
+<div class="hud">
+  <div class="scan"></div>
+  <section class="brand">
+    <div class="mark">J.A.R.V.I.S.</div>
+    <div class="rail"></div>
+  </section>
+  <div class="topRight">
+    <div class="chip" id="clock">--:--:--</div>
+    <div class="chip">CORE <strong>ONLINE</strong></div>
+    <div class="chip">VOICE <strong>ACTIVE</strong></div>
+    <button class="closeBtn" id="closeApp" title="Schliessen" aria-label="Schliessen">X</button>
+  </div>
+  <section class="panel left">
+    <div class="panelHead">
+      <h2>CHATS</h2>
+      <div class="panelActions">
+        <button class="iconBtn" id="newChat" type="button" title="Neuer Chat" aria-label="Neuer Chat">+</button>
+        <button class="iconBtn" id="renameChat" type="button" title="Chat umbenennen" aria-label="Chat umbenennen">✎</button>
+        <button class="iconBtn" id="deleteChat" type="button" title="Chat löschen" aria-label="Chat löschen">⌫</button>
+        <button class="iconBtn" id="refreshChats" type="button" title="Aktualisieren" aria-label="Aktualisieren">↻</button>
+      </div>
+    </div>
+    <input class="chatSearch" id="chatSearch" placeholder="Chats suchen..." autocomplete="off"/>
+    <div class="chatList" id="chatList"></div>
+    <div class="chatDetail" id="chatDetail"></div>
+    <h2>LIVE</h2>
+    <div id="log" class="console">
+      <div><span class="tag">JARVIS &gt;</span> 3D HUMANOID ONLINE</div>
+      <div><span class="tag">JARVIS &gt;</span> AI CORE VERBUNDEN</div>
+      <div><span class="tag">JARVIS &gt;</span> SYSTEM BEREIT</div>
+    </div>
+  </section>
+  <section class="panel right">
+    <h2>SYSTEM STATUS</h2>
+    <div class="row"><span>CORE</span><div class="meter"><span style="width:96%"></span></div><span>96%</span></div>
+    <div class="row"><span>VOICE</span><div class="meter"><span id="voiceMeter" style="width:86%"></span></div><span id="voiceText">AKTIV</span></div>
+    <div class="row"><span>MODEL</span><div class="meter"><span style="width:92%"></span></div><span>NEXT</span></div>
+    <div class="row"><span>LINK</span><div class="meter"><span id="linkMeter" style="width:82%"></span></div><span id="linkText">BEREIT</span></div>
+  </section>
+  <div class="stateLine" id="statusText">JARVIS BEREIT</div>
+  <div class="workLine" id="workText">Warte auf Befehl</div>
+  <form class="command" id="commandForm">
+    <input id="cmd" placeholder="Schreib was Jarvis machen soll..." autocomplete="off"/>
+    <button id="send" type="submit">SENDEN</button>
+  </form>
+</div>
+<div class="dropOverlay" id="dropOverlay">
+  <div class="dropBox">
+    <div class="dropTitle">DATEI / FOTO / ORDNER ABLEGEN</div>
+    <div class="dropText">Jarvis merkt den Pfad. Danach sagst du zum Beispiel: „analysiere das“, „bearbeite das“ oder „indexiere das“.</div>
+  </div>
+</div>
+
+<script>
+const canvas = document.getElementById('stage');
+const ctx = canvas.getContext('2d');
+const logEl = document.getElementById('log');
+const chatSearch = document.getElementById('chatSearch');
+const chatList = document.getElementById('chatList');
+const chatDetail = document.getElementById('chatDetail');
+const refreshChats = document.getElementById('refreshChats');
+const newChat = document.getElementById('newChat');
+const renameChat = document.getElementById('renameChat');
+const deleteChat = document.getElementById('deleteChat');
+const statusText = document.getElementById('statusText');
+const workText = document.getElementById('workText');
+const dropOverlay = document.getElementById('dropOverlay');
+const voiceMeter = document.getElementById('voiceMeter');
+const voiceText = document.getElementById('voiceText');
+const linkMeter = document.getElementById('linkMeter');
+const linkText = document.getElementById('linkText');
+const API_BASE = location.protocol === 'file:' ? 'http://127.0.0.1:8765' : '';
+let W = 0, H = 0, RENDER_SCALE = 1;
+let energy = 0, targetEnergy = .18, speakingTimer = 0, speechHoldUntil = 0;
+let phase = 'idle';
+let taskRunning = false;
+let lastPhaseText = '';
+let lastPhaseTime = 0;
+let lastWorkText = '';
+let lastLogText = '';
+let selectedChatId = null;
+let activeChatId = null;
+let selectedChatTitle = '';
+let chatCache = [];
+let chatSearchTimer = 0;
+const FOUR_K_PIXELS = 3840 * 2160;
+
+function resize(){
+  W = window.innerWidth;
+  H = window.innerHeight;
+  const targetScale = Math.sqrt(FOUR_K_PIXELS / Math.max(1, W * H));
+  RENDER_SCALE = Math.max(1, Math.min(1.8, targetScale));
+  canvas.width = Math.floor(W * RENDER_SCALE);
+  canvas.height = Math.floor(H * RENDER_SCALE);
+  canvas.style.width = W + 'px';
+  canvas.style.height = H + 'px';
+  ctx.setTransform(RENDER_SCALE,0,0,RENDER_SCALE,0,0);
+  window.jarvisRenderMode = '4K';
+  window.jarvisRenderResolution = canvas.width + 'x' + canvas.height;
+}
+window.addEventListener('resize', resize);
+resize();
+
+function setPhase(next, label){
+  const phaseText = `${next}|${label}`;
+  const now = Date.now();
+  if(phaseText === lastPhaseText) return;
+  lastPhaseText = phaseText;
+  lastPhaseTime = now;
+  phase = next;
+  document.body.dataset.phase = next;
+  statusText.textContent = label;
+  if(next === 'speaking'){
+    voiceMeter.style.width = '100%';
+    voiceText.textContent = 'ANTW';
+    linkMeter.style.width = '98%';
+    linkText.textContent = 'LIVE';
+    targetEnergy = 1;
+  }else if(next === 'thinking'){
+    voiceMeter.style.width = '78%';
+    voiceText.textContent = 'DENKT';
+    linkMeter.style.width = '94%';
+    linkText.textContent = 'KI';
+    targetEnergy = .72;
+  }else if(next === 'coding' || next === 'web' || next === 'terminal' || next === 'reading'){
+    voiceMeter.style.width = '88%';
+    voiceText.textContent = next === 'web' ? 'WEB' : next === 'terminal' ? 'CMD' : next === 'reading' ? 'LIEST' : 'CODE';
+    linkMeter.style.width = '99%';
+    linkText.textContent = 'ARBEIT';
+    targetEnergy = .86;
+  }else if(next === 'listening'){
+    voiceMeter.style.width = '96%';
+    voiceText.textContent = 'HÖRT';
+    linkMeter.style.width = '88%';
+    linkText.textContent = 'INPUT';
+    targetEnergy = .52;
+  }else{
+    voiceMeter.style.width = '86%';
+    voiceText.textContent = 'AKTIV';
+    linkMeter.style.width = '82%';
+    linkText.textContent = 'BEREIT';
+    targetEnergy = .18;
+  }
+}
+
+function setWork(label, detail){
+  const cleanLabel = String(label || 'Status');
+  const cleanDetail = String(detail || '').trim();
+  const shownDetail = cleanDetail.length > 220 ? cleanDetail.slice(0, 220) + ' ...' : cleanDetail;
+  const nextText = shownDetail ? `${cleanLabel}: ${shownDetail}` : cleanLabel;
+  if(nextText === lastWorkText) return;
+  lastWorkText = nextText;
+  workText.textContent = nextText;
+}
+
+function escapeHtml(value){
+  return String(value).replace(/[<>&]/g, char => ({'<':'&lt;','>':'&gt;','&':'&amp;'}[char]));
+}
+
+function logLine(tag, text){
+  text = String(text || '').trim();
+  if(!text) return;
+  const noisy = /^(AKTION|ERKANNT|SYSTEM|DROP)$/i.test(tag);
+  const important = /(fehler|fertig|bereit|rendert|video|codier|coding|comfy|ollama|gestartet|abgeschlossen|nicht erreichbar)/i.test(text);
+  if(noisy && !important) return;
+  if(text.length > 420) text = text.slice(0, 417) + '...';
+  const key = `${tag}|${text}`;
+  if(key === lastLogText) return;
+  lastLogText = key;
+  const div = document.createElement('div');
+  div.innerHTML = `<span class="tag">${escapeHtml(tag)} &gt;</span> ${escapeHtml(text)}`;
+  logEl.appendChild(div);
+  while(logEl.children.length > 10) logEl.removeChild(logEl.firstChild);
+  logEl.scrollTop = logEl.scrollHeight;
+}
+
+function shortTime(value){
+  const date = new Date(Number(value || 0) * 1000);
+  if(Number.isNaN(date.getTime())) return '';
+  return date.toLocaleString('de-DE', {day:'2-digit', month:'2-digit', hour:'2-digit', minute:'2-digit'});
+}
+
+function renderChatList(chats){
+  chatCache = chats;
+  if(!chats.length){
+    chatList.innerHTML = '<div class="chatMeta">Keine Chats gefunden</div>';
+    chatDetail.innerHTML = '<div class="chatMeta">Neuer Chat bereit</div>';
+    return;
+  }
+  chatList.innerHTML = chats.map(chat => `
+    <button class="chatItem ${chat.id === selectedChatId || chat.active ? 'active' : ''}" type="button" data-chat-id="${escapeHtml(chat.id)}">
+      <span class="chatTitle">${escapeHtml(chat.title || 'Chat')}</span>
+      <span class="chatMeta">${escapeHtml(shortTime(chat.time))} · ${escapeHtml(chat.preview || '')}</span>
+      ${chat.workspace ? `<span class="chatMeta">ORDNER · ${escapeHtml(chat.workspace)}</span>` : ''}
+    </button>
+  `).join('');
+  for(const item of chatList.querySelectorAll('.chatItem')){
+    item.addEventListener('click', () => selectChat(item.dataset.chatId));
+    item.addEventListener('dblclick', () => renameSelectedChat(item.dataset.chatId));
+  }
+  const active = chats.find(chat => chat.active) || chats.find(chat => chat.id === selectedChatId) || chats[0];
+  if(active && !selectedChatId) selectChat(active.id, false);
+}
+
+function renderChatDetail(chat){
+  if(!chat){
+    chatDetail.innerHTML = '<div class="chatMeta">Chat nicht gefunden</div>';
+    return;
+  }
+  selectedChatTitle = chat.title || selectedChatTitle || 'Chat';
+  const workspaceLine = chat.workspace ? `<div class="chatMeta">Arbeitsordner: ${escapeHtml(chat.workspace)}</div>` : '';
+  if(!(chat.messages || []).length){
+    chatDetail.innerHTML = workspaceLine + '<div class="chatMeta">Neuer Chat</div>';
+    return;
+  }
+  chatDetail.innerHTML = workspaceLine + (chat.messages || []).map(msg => {
+    const role = msg.role === 'assistant' ? 'assistant' : 'user';
+    const label = role === 'assistant' ? 'JARVIS' : 'DU';
+    return `<div class="msg ${role}">
+      <span class="msgRole">${label} · ${escapeHtml(shortTime(msg.time))}</span>
+      ${escapeHtml(msg.text || '')}
+    </div>`;
+  }).join('');
+  chatDetail.scrollTop = chatDetail.scrollHeight;
+}
+
+async function loadChats(preferredId){
+  try{
+    const q = encodeURIComponent(chatSearch.value || '');
+    const res = await fetch(`${API_BASE}/api/chats?q=${q}`);
+    const data = await res.json();
+    const chats = data.chats || [];
+    activeChatId = data.active_chat_id || activeChatId;
+    if(preferredId) selectedChatId = preferredId;
+    if(activeChatId && !selectedChatId) selectedChatId = activeChatId;
+    if(selectedChatId && !chats.some(chat => chat.id === selectedChatId)) selectedChatId = null;
+    renderChatList(chats);
+  }catch(err){
+    chatList.innerHTML = '<div class="chatMeta">Chat-Suche nicht erreichbar</div>';
+  }
+}
+
+async function selectChat(id, notifyServer = true){
+  selectedChatId = id;
+  activeChatId = id;
+  const cached = chatCache.find(chat => chat.id === id);
+  if(cached) selectedChatTitle = cached.title || selectedChatTitle;
+  let selectedWorkspace = cached?.workspace || '';
+  for(const item of chatList.querySelectorAll('.chatItem')){
+    item.classList.toggle('active', item.dataset.chatId === id);
+  }
+  try{
+    if(notifyServer){
+      const selectRes = await fetch(`${API_BASE}/api/chats/select`, {
+        method:'POST',
+        headers:{'content-type':'application/json'},
+        body:JSON.stringify({id})
+      });
+      const selectData = await selectRes.json();
+      if(Object.prototype.hasOwnProperty.call(selectData, 'workspace')){
+        selectedWorkspace = selectData.workspace || '';
+      }
+    }
+    const res = await fetch(`${API_BASE}/api/chat_detail?id=${encodeURIComponent(id)}`);
+    const data = await res.json();
+    renderChatDetail(data.chat);
+    if(data.chat && Object.prototype.hasOwnProperty.call(data.chat, 'workspace')){
+      selectedWorkspace = data.chat.workspace || '';
+    }
+    if(selectedWorkspace){
+      setWork('Arbeitsordner aktiv', selectedWorkspace);
+    }else{
+      setWork('Chat aktiv', selectedChatTitle || id);
+    }
+    logLine('CHAT', `Aktiv: ${selectedChatTitle || id}`);
+  }catch(err){
+    chatDetail.innerHTML = '<div class="chatMeta">Chat konnte nicht geladen werden</div>';
+  }
+}
+
+chatSearch.addEventListener('input', () => {
+  clearTimeout(chatSearchTimer);
+  chatSearchTimer = setTimeout(loadChats, 180);
+});
+refreshChats.addEventListener('click', loadChats);
+async function renameSelectedChat(id){
+  const chatId = id || selectedChatId || activeChatId;
+  if(!chatId){
+    logLine('SYSTEM', 'Kein Chat ausgewählt');
+    return;
+  }
+  const cached = chatCache.find(chat => chat.id === chatId);
+  const oldTitle = cached?.title || selectedChatTitle || 'Chat';
+  const title = prompt('Chat umbenennen', oldTitle);
+  if(title === null) return;
+  const clean = title.trim();
+  if(!clean) return;
+  try{
+    const res = await fetch(`${API_BASE}/api/chats/rename`, {
+      method:'POST',
+      headers:{'content-type':'application/json'},
+      body:JSON.stringify({id:chatId, title:clean})
+    });
+    const data = await res.json();
+    activeChatId = data.active_chat_id || chatId;
+    selectedChatId = activeChatId;
+    selectedChatTitle = data.chat?.title || clean;
+    loadChats(activeChatId);
+  }catch(err){
+    logLine('SYSTEM', 'Chat konnte nicht umbenannt werden');
+  }
+}
+renameChat.addEventListener('click', () => renameSelectedChat());
+
+async function deleteSelectedChat(id){
+  const chatId = id || selectedChatId || activeChatId;
+  if(!chatId){
+    logLine('SYSTEM', 'Kein Chat ausgewählt');
+    return;
+  }
+  const cached = chatCache.find(chat => chat.id === chatId);
+  const title = cached?.title || selectedChatTitle || 'Chat';
+  if(!confirm(`Chat "${title}" wirklich löschen?`)) return;
+  try{
+    const res = await fetch(`${API_BASE}/api/chats/delete`, {
+      method:'POST',
+      headers:{'content-type':'application/json'},
+      body:JSON.stringify({id:chatId})
+    });
+    const data = await res.json();
+    activeChatId = data.active_chat_id || null;
+    selectedChatId = activeChatId;
+    selectedChatTitle = '';
+    chatSearch.value = '';
+    renderChatDetail({messages:[]});
+    loadChats(activeChatId);
+  }catch(err){
+    logLine('SYSTEM', 'Chat konnte nicht gelöscht werden');
+  }
+}
+deleteChat.addEventListener('click', () => deleteSelectedChat());
+newChat.addEventListener('click', async () => {
+  try{
+    const res = await fetch(`${API_BASE}/api/chats/new`, {method:'POST'});
+      const data = await res.json();
+      activeChatId = data.active_chat_id;
+      selectedChatId = activeChatId;
+      selectedChatTitle = data.chat?.title || 'Neuer Chat';
+      chatSearch.value = '';
+      renderChatDetail({messages:[]});
+      setPhase('idle', 'CHAT OHNE ORDNER');
+      setWork('Chat ohne Ordner', 'Kein Arbeitsordner aktiv');
+      logLine('CHAT', 'Neuer Chat ohne Ordner');
+      loadChats(activeChatId);
+      document.getElementById('cmd').focus();
+  }catch(err){
+    logLine('SYSTEM', 'Neuer Chat konnte nicht erstellt werden');
+  }
+});
+
+window.jarvisShowDropHint = function(show){
+  dropOverlay.classList.toggle('show', !!show);
+};
+
+window.addEventListener('dragover', event => {
+  event.preventDefault();
+  window.jarvisShowDropHint(true);
+});
+
+window.addEventListener('dragleave', event => {
+  if(event.clientX <= 0 || event.clientY <= 0 || event.clientX >= window.innerWidth || event.clientY >= window.innerHeight){
+    window.jarvisShowDropHint(false);
+  }
+});
+
+window.addEventListener('drop', async event => {
+  event.preventDefault();
+  window.jarvisShowDropHint(false);
+  const paths = [...event.dataTransfer.files].map(file => file.path || file.name).filter(Boolean);
+  if(paths.length){
+    try{
+      const res = await fetch(`${API_BASE}/api/drop_paths`, {
+        method:'POST',
+        headers:{'content-type':'application/json'},
+        body:JSON.stringify({paths})
+      });
+      const data = await res.json();
+      logLine('DROP', data.summary || paths.join(', '));
+      setWork('Drop aktiv', data.summary || paths.join(', '));
+    }catch(err){
+      logLine('DROP', 'Pfad wurde vom Desktop-Fenster uebernommen');
+    }
+  }
+});
+
+function rand(seed){
+  const x = Math.sin(seed * 127.1) * 43758.5453123;
+  return x - Math.floor(x);
+}
+
+const nodes = [];
+function addNode(x,y,z,s,a,warm){
+  nodes.push({x,y,z,s,a,warm});
+}
+
+for(let i = 0; i < 1420; i++){
+  const u = rand(i + 11);
+  const v = rand(i + 13);
+  const theta = Math.PI * 2 * u;
+  const phi = Math.acos(2 * v - 1);
+  const shell = .76 + Math.pow(rand(i + 17), .4) * .26;
+  let x = Math.sin(phi) * Math.cos(theta) * .42 * shell;
+  let y = .77 + Math.cos(phi) * .56 * shell;
+  let z = Math.sin(phi) * Math.sin(theta) * .29 * shell;
+  if(y < .34) x *= .82;
+  addNode(x,y,z,.55 + rand(i + 19) * 1.45,.25 + rand(i + 23) * .62, x > .03 || rand(i + 29) > .8);
+}
+
+for(let i = 0; i < 260; i++){
+  const side = rand(i + 101) < .5 ? -1 : 1;
+  const a = rand(i + 103);
+  addNode(side * (.39 + Math.sin(a * Math.PI) * .09), .74 + (a - .5) * .48, (rand(i + 107) * 2 - 1) * .08, .48 + rand(i + 109) * 1.05, .22 + rand(i + 113) * .42, true);
+}
+
+for(let i = 0; i < 980; i++){
+  const u = rand(i + 201) * 2 - 1;
+  const v = rand(i + 203) * 2 - 1;
+  const shoulder = Math.max(0, 1 - Math.abs(v - .12) * .95);
+  const chest = Math.max(0, 1 - Math.abs(v + .38) * .72);
+  const width = .24 + shoulder * .62 + chest * .2;
+  addNode(
+    u * width * Math.pow(rand(i + 207), .42),
+    -.18 + v * .55,
+    (rand(i + 211) * 2 - 1) * (.09 + Math.abs(u) * .12),
+    .52 + rand(i + 213) * 1.25,
+    .18 + rand(i + 217) * .5,
+    rand(i + 219) > .46
+  );
+}
+
+for(let i = 0; i < 280; i++){
+  const a = rand(i + 301) * Math.PI * 2;
+  const r = rand(i + 303);
+  addNode(Math.cos(a) * (.045 + r * .07), .1 + rand(i + 307) * .36, Math.sin(a) * (.04 + r * .06), .45 + rand(i + 311) * .9, .22 + rand(i + 313) * .44, rand(i + 317) > .5);
+}
+
+const links = [];
+for(let i = 0; i < 5200 && links.length < 980; i++){
+  const a = Math.floor(rand(i + 701) * nodes.length);
+  const b = Math.floor(rand(i + 907) * nodes.length);
+  if(a === b) continue;
+  const pa = nodes[a], pb = nodes[b];
+  const dx = pa.x - pb.x, dy = pa.y - pb.y, dz = pa.z - pb.z;
+  const d = dx*dx + dy*dy + dz*dz;
+  if(d < .032) links.push([a,b,rand(i + 1009)]);
+}
+
+const rain = [];
+for(let i = 0; i < 190; i++){
+  rain.push({x:rand(i+1401)*2-1,y:rand(i+1403)*2-1,s:.14+rand(i+1407)*.28,l:8+rand(i+1409)*26,a:.04+rand(i+1411)*.16});
+}
+
+let exactAvatarReady = false;
+let exactAvatarW = 286;
+let exactAvatarH = 387;
+const exactAvatarParticles = [];
+const exactOrbitParticles = [];
+const exactSignalLinks = [];
+const exactAvatarImg = new Image();
+exactAvatarImg.onload = () => {
+  exactAvatarW = exactAvatarImg.naturalWidth || 286;
+  exactAvatarH = exactAvatarImg.naturalHeight || 387;
+  exactAvatarParticles.length = 0;
+  exactOrbitParticles.length = 0;
+  exactSignalLinks.length = 0;
+  const off = document.createElement('canvas');
+  const octx = off.getContext('2d', {willReadFrequently:true});
+  off.width = exactAvatarW;
+  off.height = exactAvatarH;
+  octx.drawImage(exactAvatarImg, 0, 0);
+  const data = octx.getImageData(0, 0, off.width, off.height).data;
+
+  for(let y = 0; y < off.height; y += 1){
+    for(let x = 0; x < off.width; x += 1){
+      const i = (y * off.width + x) * 4;
+      const r = data[i], g = data[i+1], b = data[i+2], a = data[i+3];
+      const bright = Math.max(r,g,b);
+      const warm = r > b + 18 && r > 45;
+      const cyan = b > 34 && g > 38 && b >= r * .72;
+      const isHologramPixel = a > 16 && bright > 24 && (warm || cyan || bright > 62);
+      const keep = rand(x * 17 + y * 31) > (bright > 95 ? .04 : .26);
+      if(!isHologramPixel || !keep) continue;
+
+      const nx = x / off.width;
+      const ny = y / off.height;
+      const centerDistance = Math.hypot(nx - .5, ny - .42);
+      const headZone = ny < .58 && nx > .18 && nx < .78;
+      const platformZone = false;
+      const torsoZone = ny >= .5 && ny < .76;
+      const headMask = ny < .56 && nx > .15 && nx < .8 && Math.pow((nx - .48) / .34, 2) + Math.pow((ny - .32) / .34, 2) < 1.2;
+      const torsoMask = ny >= .43 && ny < .74 && nx > .14 + Math.max(0, ny - .56) * .2 && nx < .84 - Math.max(0, ny - .56) * .13;
+      const leftShoulderMask = ny >= .5 && ny < .78 && Math.pow((nx - .25) / .2, 2) + Math.pow((ny - .65) / .16, 2) < 1.08;
+      const rightShoulderMask = ny >= .49 && ny < .79 && Math.pow((nx - .75) / .26, 2) + Math.pow((ny - .65) / .17, 2) < 1.18;
+      const platformEllipse = false;
+      const platformMask = false;
+      const coreMask = nx > .35 && nx < .58 && ny > .42 && ny < .72;
+      if(!(headMask || torsoMask || leftShoulderMask || rightShoulderMask || platformMask || coreMask)) continue;
+      const bodyWarm = torsoMask || leftShoulderMask || rightShoulderMask || coreMask;
+      const displayWarm = warm || (bodyWarm && rand(x * 29 + y * 37) > .62);
+      const pr = displayWarm && !headMask ? Math.max(r, 208 + rand(x + y) * 28) : r;
+      const pg = displayWarm && !headMask ? Math.max(g, 86 + rand(x * 3 + y) * 44) : g;
+      const pb = displayWarm && !headMask ? Math.min(b, 96 + rand(x + y * 5) * 58) : b;
+      const sideDepth = (nx - .5) * (headZone ? .28 : torsoZone ? .18 : .09);
+      const z = (headZone ? .28 : platformZone ? -.12 : .1) + sideDepth + (rand(x + y * 3) - .5) * .22 - centerDistance * .06;
+      exactAvatarParticles.push({
+        nx, ny, z,
+        r: pr, g: pg, b: pb,
+        a: Math.min(1, .38 + bright / 255 * .78 + (bodyWarm && displayWarm ? .04 : 0)),
+        s: .36 + bright / 255 * 1.55 + (bodyWarm && displayWarm ? .08 : 0),
+        drift: rand(x * 13 + y * 7) * Math.PI * 2,
+        layer: platformZone ? 'platform' : headZone ? 'head' : torsoZone ? 'torso' : 'field',
+        spark: rand(x * 41 + y * 19),
+        bodyWarm,
+        warm: displayWarm
+      });
+    }
+  }
+
+  for(let i = 0; i < 980; i++){
+    const zone = rand(i + 2801);
+    if(zone > .72) continue;
+    const head = zone < .42;
+    const platform = zone > .72;
+    exactOrbitParticles.push({
+      cx: .5 + (rand(i + 2803) - .5) * (platform ? .08 : .04),
+      cy: head ? (.33 + (rand(i + 2805) - .5) * .24) : platform ? (.82 + (rand(i + 2807) - .5) * .09) : (.57 + (rand(i + 2809) - .5) * .32),
+      rx: head ? (.22 + rand(i + 2811) * .24) : platform ? (.25 + rand(i + 2813) * .28) : (.28 + rand(i + 2815) * .34),
+      ry: head ? (.055 + rand(i + 2817) * .12) : platform ? (.018 + rand(i + 2819) * .055) : (.05 + rand(i + 2821) * .18),
+      depth: head ? (.22 + rand(i + 2823) * .36) : platform ? (.12 + rand(i + 2825) * .22) : (.18 + rand(i + 2827) * .34),
+      speed: (rand(i + 2829) > .5 ? 1 : -1) * (.14 + rand(i + 2831) * .44),
+      phase: rand(i + 2833) * Math.PI * 2,
+      size: .35 + rand(i + 2835) * 1.25,
+      drop: zone > .48 && zone < .72,
+      warm: rand(i + 2837) > .62
+    });
+  }
+
+  for(let i = 0; i < 16000 && exactSignalLinks.length < 1050; i++){
+    const ia = Math.floor(rand(i + 3301) * exactAvatarParticles.length);
+    const ib = Math.floor(rand(i + 4301) * exactAvatarParticles.length);
+    if(ia === ib) continue;
+    const a = exactAvatarParticles[ia], b = exactAvatarParticles[ib];
+    const dx = a.nx - b.nx, dy = a.ny - b.ny, dz = a.z - b.z;
+    const close = dx * dx + dy * dy < .0028 && Math.abs(dz) < .22;
+    const sameBody = a.layer === b.layer || a.layer === 'head' || b.layer === 'head';
+    if(close && sameBody) exactSignalLinks.push([ia, ib, rand(i + 5301)]);
+  }
+  exactAvatarReady = exactAvatarParticles.length > 500;
+  window.exactAvatarReady = exactAvatarReady;
+  window.exactAvatarParticlesCount = exactAvatarParticles.length;
+  window.exactOrbitParticlesCount = exactOrbitParticles.length;
+};
+exactAvatarImg.src = 'assets/jarvis_exact_hologram_source.png';
+
+function rot(p, t){
+  const yaw = -.24 + Math.sin(t * .18) * .055;
+  const pitch = .035 + Math.sin(t * .13) * .02;
+  const cy = Math.cos(yaw), sy = Math.sin(yaw);
+  const cp = Math.cos(pitch), sp = Math.sin(pitch);
+  let x = p.x * cy + p.z * sy;
+  let z = -p.x * sy + p.z * cy;
+  let y = p.y * cp - z * sp;
+  z = p.y * sp + z * cp;
+  return {x,y,z,s:p.s || 1,a:p.a || 1,warm:p.warm};
+}
+
+function project(p, base, cx, cy){
+  const cam = 3.05;
+  const scale = base / (cam - p.z);
+  return {x:cx + p.x * scale, y:cy - p.y * scale, z:p.z, scale, s:p.s || 1, a:p.a || 1, warm:p.warm};
+}
+
+function point3(p, base, cx, cy, t){
+  return project(rot(p, t), base, cx, cy);
+}
+
+function line2(a,b,alpha,width,color){
+  const front = Math.max(0, Math.min(1, ((a.z + b.z) * .5 + 1.25) / 2.5));
+  const rgb = color === 'cyan' ? '90,215,255' : color === 'green' ? '49,255,174' : '255,164,48';
+  ctx.strokeStyle = `rgba(${rgb},${alpha * (.35 + front * .85)})`;
+  ctx.lineWidth = width * (.6 + front * 1.15);
+  ctx.beginPath();
+  ctx.moveTo(a.x,a.y);
+  ctx.lineTo(b.x,b.y);
+  ctx.stroke();
+}
+
+function path3(points, base, cx, cy, t, alpha, width, color){
+  const pts = points.map(p => point3(p, base, cx, cy, t));
+  for(let i = 1; i < pts.length; i++) line2(pts[i-1], pts[i], alpha, width, color);
+}
+
+function ellipsoidPoint(cx,cy,cz,rx,ry,rz,theta,phi){
+  return {
+    x:cx + Math.cos(theta) * Math.cos(phi) * rx,
+    y:cy + Math.sin(phi) * ry,
+    z:cz + Math.sin(theta) * Math.cos(phi) * rz
+  };
+}
+
+function drawHeadGrid(t, base, cx, cy){
+  for(let lat = -6; lat <= 6; lat++){
+    const phi = lat / 7 * 1.18;
+    const pts = [];
+    for(let i = 0; i <= 112; i++){
+      const th = i * Math.PI * 2 / 112;
+      pts.push(ellipsoidPoint(0,.77,0,.42,.56,.29,th,phi));
+    }
+    path3(pts, base, cx, cy, t, .18 + energy * .04, .42, 'cyan');
+  }
+  for(let lon = 0; lon < 18; lon++){
+    const th = lon * Math.PI * 2 / 18;
+    const pts = [];
+    for(let i = -58; i <= 58; i++){
+      const phi = i / 58 * 1.24;
+      pts.push(ellipsoidPoint(0,.77,0,.42,.56,.29,th,phi));
+    }
+    path3(pts, base, cx, cy, t, .12 + energy * .035, .36, lon % 3 ? 'cyan' : 'orange');
+  }
+}
+
+function drawFace(t, base, cx, cy){
+  const blink = phase === 'speaking' ? Math.max(0, Math.sin(t * 7.2)) * .012 : 0;
+  const eyeL = [{x:-.19,y:.805 - blink,z:.292},{x:-.128,y:.815 - blink,z:.326},{x:-.056,y:.808 - blink,z:.323}];
+  const eyeR = [{x:.056,y:.808 - blink,z:.323},{x:.128,y:.815 - blink,z:.326},{x:.19,y:.805 - blink,z:.292}];
+  const browL = [{x:-.215,y:.885,z:.265},{x:-.128,y:.902,z:.318},{x:-.04,y:.885,z:.316}];
+  const browR = browL.map(p => ({x:-p.x,y:p.y,z:p.z}));
+  const nose = [{x:-.018,y:.86,z:.33},{x:.02,y:.75,z:.37},{x:.01,y:.65,z:.382},{x:-.05,y:.59,z:.34}];
+  const jawL = [{x:-.255,y:.75,z:.22},{x:-.232,y:.56,z:.27},{x:-.12,y:.39,z:.29},{x:0,y:.34,z:.285}];
+  const jawR = jawL.map(p => ({x:-p.x,y:p.y,z:p.z}));
+  const cheekL = [{x:-.22,y:.66,z:.285},{x:-.13,y:.61,z:.34},{x:-.035,y:.59,z:.35}];
+  const cheekR = cheekL.map(p => ({x:-p.x,y:p.y,z:p.z}));
+  const earR = [{x:.36,y:.83,z:.02},{x:.405,y:.76,z:.035},{x:.398,y:.66,z:.045},{x:.355,y:.6,z:.04}];
+  for(const pts of [browL,browR,eyeL,eyeR,nose,jawL,jawR,cheekL,cheekR,earR]){
+    path3(pts, base, cx, cy, t, .72 + energy * .08, .9, 'cyan');
+  }
+  drawMouth(t, base, cx, cy);
+}
+
+function drawMouth(t, base, cx, cy){
+  const talking = phase === 'speaking';
+  const open = talking ? .012 + Math.max(0, Math.sin(t * 18)) * .04 + Math.max(0, Math.sin(t * 31 + .8)) * .02 : .0015;
+  const upper = [{x:-.095,y:.548,z:.35},{x:-.035,y:.543,z:.376},{x:.028,y:.545,z:.376},{x:.098,y:.552,z:.342}];
+  const lower = [{x:-.09,y:.538-open,z:.352},{x:-.03,y:.529-open*1.05,z:.382},{x:.032,y:.531-open*1.05,z:.382},{x:.09,y:.541-open,z:.345}];
+  path3(upper, base, cx, cy, t, talking ? .86 : .48, talking ? 1.12 : .58, 'cyan');
+  path3(lower, base, cx, cy, t, talking ? .72 : .22, talking ? .9 : .34, 'cyan');
+  if(talking){
+    const left = point3({x:-.035,y:.539,z:.382}, base, cx, cy, t);
+    const right = point3({x:.035,y:.54,z:.382}, base, cx, cy, t);
+    line2(left, right, .36 + energy * .16, .45, 'cyan');
+  }
+}
+
+function drawTorsoLines(t, base, cx, cy){
+  const neckL = [{x:-.07,y:.36,z:.12},{x:-.1,y:.16,z:.13},{x:-.08,y:.02,z:.1}];
+  const neckR = neckL.map(p => ({x:-p.x,y:p.y,z:p.z}));
+  const shoulderL = [], shoulderR = [];
+  for(let i = 0; i <= 76; i++){
+    const a = i / 76;
+    shoulderL.push({x:-.13 - a*.72,y:.07 - Math.sin(a*Math.PI)*.17,z:.05 + Math.sin(a*Math.PI)*.12});
+    shoulderR.push({x:.13 + a*.72,y:.07 - Math.sin(a*Math.PI)*.17,z:.05 + Math.sin(a*Math.PI)*.12});
+  }
+  const chestL = [{x:-.3,y:.04,z:.13},{x:-.19,y:-.11,z:.16},{x:-.12,y:-.42,z:.14},{x:-.23,y:-.72,z:.08}];
+  const chestR = chestL.map(p => ({x:-p.x,y:p.y,z:p.z}));
+  const center = [{x:0,y:.18,z:.14},{x:0,y:-.1,z:.18},{x:0,y:-.44,z:.15},{x:0,y:-.76,z:.1}];
+  for(const [pts,color,alpha,width] of [[neckL,'orange',.48,.7],[neckR,'orange',.48,.7],[shoulderL,'cyan',.62,.95],[shoulderR,'cyan',.62,.95],[chestL,'orange',.48,.78],[chestR,'orange',.48,.78],[center,'green',.6,.82]]){
+    path3(pts, base, cx, cy, t, alpha + energy * .1, width, color);
+  }
+}
+
+function drawPlatform(t, base, cx, cy){
+  return;
+  const center = point3({x:0,y:-.82,z:.04}, base, cx, cy, t);
+  ctx.globalCompositeOperation = 'lighter';
+  for(let r = 0; r < 12; r++){
+    const radius = base * (.05 + r * .025);
+    const h = radius * .27;
+    const start = t * (.45 + r * .015) + r * .44;
+    ctx.strokeStyle = r % 2 ? `rgba(90,215,255,${.17 + energy * .035})` : `rgba(255,160,45,${.2 + energy * .05})`;
+    ctx.lineWidth = .55 + r * .08;
+    ctx.beginPath();
+    ctx.ellipse(center.x, center.y, radius, h, 0, start, start + Math.PI * 1.45);
+    ctx.stroke();
+  }
+  const glow = ctx.createRadialGradient(center.x, center.y, 0, center.x, center.y, base * .19);
+  glow.addColorStop(0, `rgba(255,190,70,${.28 + energy * .18})`);
+  glow.addColorStop(.34, `rgba(80,210,255,${.14 + energy * .08})`);
+  glow.addColorStop(1, 'rgba(0,0,0,0)');
+  ctx.fillStyle = glow;
+  ctx.beginPath();
+  ctx.ellipse(center.x, center.y, base * .22, base * .065, 0, 0, Math.PI * 2);
+  ctx.fill();
+  for(let i = 0; i < 36; i++){
+    const a = i * Math.PI * 2 / 36 + t * .18;
+    const x = center.x + Math.cos(a) * base * (.04 + (i % 6) * .018);
+    const y = center.y - Math.abs(Math.sin(a)) * base * .03;
+    ctx.strokeStyle = `rgba(255,175,55,${.07 + energy * .08})`;
+    ctx.lineWidth = .45;
+    ctx.beginPath();
+    ctx.moveTo(x,y);
+    ctx.lineTo(x + Math.cos(a) * base * .012, y - base * (.08 + (i % 5) * .012));
+    ctx.stroke();
+  }
+}
+
+function drawNodesAndLinks(t, base, cx, cy){
+  ctx.globalCompositeOperation = 'lighter';
+  for(const [ia, ib, r] of links){
+    const a = point3(nodes[ia], base, cx, cy, t);
+    const b = point3(nodes[ib], base, cx, cy, t);
+    const color = nodes[ia].warm || nodes[ib].warm ? 'orange' : 'cyan';
+    line2(a,b,.045 + r * .055 + energy * .02,.28 + r * .2,color);
+  }
+  const pts = nodes.map(n => point3(n, base, cx, cy, t)).sort((a,b) => a.z - b.z);
+  for(const p of pts){
+    const front = Math.max(0, Math.min(1, (p.z + 1.2) / 2.4));
+    const rgb = p.warm ? '255,173,62' : '81,211,255';
+    const r = (.42 + p.s * .45) * (.62 + front * 1.25) * (1 + energy * .1);
+    ctx.fillStyle = `rgba(${rgb},${p.a * (.16 + front * .55)})`;
+    ctx.beginPath();
+    ctx.arc(p.x,p.y,r,0,Math.PI*2);
+    ctx.fill();
+  }
+}
+
+function drawBackground(t){
+  // Stabiler Modus: keine vollflaechigen bewegten Scan-/Regenlinien.
+}
+
+function drawChestCore(t, base, cx, cy){
+  const p = point3({x:0,y:-.2,z:.2}, base, cx, cy, t);
+  const pulse = 1 + Math.sin(t * 5.6) * .08 + energy * .2;
+  const glow = ctx.createRadialGradient(p.x,p.y,0,p.x,p.y,base*.075*pulse);
+  glow.addColorStop(0,`rgba(255,238,150,${.7 + energy*.16})`);
+  glow.addColorStop(.34,`rgba(255,150,32,${.24 + energy*.22})`);
+  glow.addColorStop(1,'rgba(255,150,32,0)');
+  ctx.fillStyle = glow;
+  ctx.beginPath();
+  ctx.ellipse(p.x,p.y,base*.068*pulse,base*.048*pulse,0,0,Math.PI*2);
+  ctx.fill();
+}
+
+function exactScreenRect(){
+  const h = Math.min(H * 1.04, 960, W * 1.38);
+  const w = h * (exactAvatarW / exactAvatarH);
+  return {
+    x: W * .5 - w * .5,
+    y: Math.max(18, H * .45 - h * .49),
+    w, h
+  };
+}
+
+function exactClamp(value, min, max){
+  return Math.max(min, Math.min(max, value));
+}
+
+function exactPoint(p, rect, t, yaw){
+  const cx = rect.x + rect.w * .5;
+  const cy = rect.y + rect.h * .49;
+  const rawX = rect.x + rect.w * p.nx;
+  const rawY = rect.y + rect.h * p.ny;
+  const talking = phase === 'speaking';
+  const layerMove = p.layer === 'platform' ? .45 : p.layer === 'head' ? 1.18 : .88;
+  const zPulse = Math.sin(t * (.65 + p.spark * .9) + p.drift) * .024 * layerMove + (talking ? Math.sin(t * 7 + p.drift) * .006 : 0);
+  const z = p.z + zPulse;
+  const perspective = 1 + z * .105;
+  const swimX = Math.sin(t * (.82 + p.spark * .7) + p.drift) * (1.0 + Math.abs(z) * 5.8) + Math.sin(t * .38 + p.ny * 17) * rect.w * .0025 * layerMove;
+  const swimY = Math.cos(t * (.7 + p.spark * .5) + p.drift) * (.72 + Math.abs(z) * 3.6) + Math.sin(t * 1.05 + p.nx * 8) * rect.h * .0012;
+  const talkJitter = talking ? Math.sin(t * 12 + p.drift) * p.spark * .35 : 0;
+  return {
+    x: cx + (rawX - cx) * perspective + (rawX - cx) * yaw * z + swimX + talkJitter,
+    y: cy + (rawY - cy) * (1 + z * .035) + swimY - z * rect.h * .024 - energy * (p.warm ? 2.8 : 1.35),
+    z,
+    front: exactClamp((z + .48) / 1.02, 0, 1),
+    scale: perspective
+  };
+}
+
+function exactFreePoint(q, rect, t, yaw){
+  const cx = rect.x + rect.w * .5;
+  const cy = rect.y + rect.h * .49;
+  const speed = q.speed * (phase === 'speaking' ? 1.15 : phase === 'thinking' ? 1.12 : 1);
+  const a = q.phase + t * speed;
+  const fall = q.drop ? ((t * Math.abs(speed) * .09 + q.phase * .17) % 1) - .5 : 0;
+  const nx = q.cx + Math.cos(a) * q.rx + Math.sin(t * .32 + q.phase) * .014;
+  const ny = q.cy + Math.sin(a * .86 + q.phase) * q.ry + fall * .24;
+  const z = Math.sin(a) * q.depth + Math.cos(a * .43 + q.phase) * .045;
+  const rawX = rect.x + rect.w * nx;
+  const rawY = rect.y + rect.h * ny;
+  const perspective = 1 + z * .115;
+  return {
+    x: cx + (rawX - cx) * perspective + (rawX - cx) * yaw * z,
+    y: cy + (rawY - cy) * (1 + z * .03) - z * rect.h * .027,
+    z,
+    front: exactClamp((z + .42) / .84, 0, 1),
+    size: q.size * (.72 + exactClamp((z + .4) / .8, 0, 1) * 1.05),
+    warm: q.warm,
+    drop: q.drop
+  };
+}
+
+function drawExactPlatform(t, rect, foreground){
+  return;
+  const cx = rect.x + rect.w * .5;
+  const cy = rect.y + rect.h * .836;
+  const talking = phase === 'speaking';
+  ctx.globalCompositeOperation = 'lighter';
+  ctx.lineCap = 'round';
+
+  if(!foreground){
+    const glow = ctx.createRadialGradient(cx, cy, 0, cx, cy, rect.w * .47);
+    glow.addColorStop(0, `rgba(255,190,72,${.24 + energy * .24})`);
+    glow.addColorStop(.26, `rgba(85,220,255,${.13 + energy * .12})`);
+    glow.addColorStop(1, 'rgba(0,0,0,0)');
+    ctx.fillStyle = glow;
+    ctx.beginPath();
+    ctx.ellipse(cx, cy, rect.w * .42, rect.h * .09, 0, 0, Math.PI * 2);
+    ctx.fill();
+
+    for(let i = 0; i < 56; i++){
+      const a = i / 56 * Math.PI * 2 + t * .42;
+      const r = rect.w * (.08 + (i % 9) * .025);
+      const x = cx + Math.cos(a) * r;
+      const y = cy + Math.sin(a) * r * .18;
+      ctx.strokeStyle = `rgba(${i % 3 ? '79,216,255' : '255,164,48'},${.055 + energy * .075})`;
+      ctx.lineWidth = .42 + (i % 4) * .08;
+      ctx.beginPath();
+      ctx.moveTo(x, y);
+      ctx.lineTo(x + Math.cos(a) * rect.w * .012, y - rect.h * (.12 + (i % 5) * .018 + (talking ? .035 : 0)));
+      ctx.stroke();
+    }
+  }
+
+  for(let r = 0; r < 14; r++){
+    const radius = rect.w * (.12 + r * .026);
+    const h = radius * (.2 + r * .004);
+    const start = t * (.62 + r * .035) * (r % 2 ? 1 : -1) + r * .38;
+    ctx.strokeStyle = r % 2 ? `rgba(84,216,255,${.22 + energy * .07})` : `rgba(255,160,44,${.21 + energy * .09})`;
+    ctx.lineWidth = .55 + r * .07 + (foreground ? .18 : 0);
+    ctx.beginPath();
+    ctx.ellipse(cx, cy, radius, h, 0, start, start + Math.PI * (foreground ? 1.08 : 1.62));
+    ctx.stroke();
+  }
+}
+
+function drawExactScanRings(t, rect){
+  ctx.globalCompositeOperation = 'lighter';
+  ctx.lineCap = 'round';
+  const sweep = (t * .085) % 1;
+  for(let i = 0; i < 10; i++){
+    const k = (i / 10 + sweep) % 1;
+    const y = rect.y + rect.h * (.18 + k * .58);
+    const waist = 1 - Math.abs(k - .47) * 1.45;
+    const rx = rect.w * (.16 + Math.max(.08, waist) * .23);
+    const alpha = (.035 + energy * .035) * (1 - k * .28);
+    ctx.strokeStyle = `rgba(104,224,255,${alpha})`;
+    ctx.lineWidth = .48 + energy * .18;
+    ctx.beginPath();
+    ctx.ellipse(rect.x + rect.w * .47, y, rx, rect.h * (.007 + k * .011), Math.sin(t * .25) * .08, 0, Math.PI * 2);
+    ctx.stroke();
+  }
+}
+
+function drawExactOrbitField(t, rect, yaw, frontPass){
+  ctx.globalCompositeOperation = 'lighter';
+  for(const q of exactOrbitParticles){
+    const p = exactFreePoint(q, rect, t, yaw);
+    if((p.z >= 0) !== frontPass) continue;
+    const rgb = p.warm ? '255,166,48' : '82,218,255';
+    const alpha = (frontPass ? .18 : .09) + energy * (frontPass ? .13 : .07);
+    ctx.fillStyle = `rgba(${rgb},${alpha * (.45 + p.front * .85)})`;
+    ctx.beginPath();
+    ctx.arc(p.x, p.y, p.size * (1 + energy * .28), 0, Math.PI * 2);
+    ctx.fill();
+    if(p.drop && phase !== 'idle'){
+      ctx.strokeStyle = `rgba(${rgb},${.035 + energy * .055})`;
+      ctx.lineWidth = .35;
+      ctx.beginPath();
+      ctx.moveTo(p.x, p.y);
+      ctx.lineTo(p.x + Math.sin(t + p.z) * 3, p.y + rect.h * .024);
+      ctx.stroke();
+    }
+  }
+}
+
+function drawExactFacePath(points, rect, alpha, width, color){
+  const softAlpha = color === 'orange' ? alpha : alpha * .62;
+  ctx.strokeStyle = color === 'orange' ? `rgba(255,178,66,${softAlpha})` : `rgba(104,230,255,${softAlpha})`;
+  ctx.lineWidth = Math.max(.8, rect.w * width);
+  ctx.lineCap = 'round';
+  ctx.lineJoin = 'round';
+  ctx.beginPath();
+  for(let i = 0; i < points.length; i++){
+    const p = points[i];
+    const x = rect.x + rect.w * p[0];
+    const y = rect.y + rect.h * p[1];
+    if(i) ctx.lineTo(x, y);
+    else ctx.moveTo(x, y);
+  }
+  ctx.stroke();
+}
+
+function drawExactFaceStructure(t, rect){
+  const talking = phase === 'speaking';
+  const lift = talking ? Math.sin(t * 9.2) * .004 : Math.sin(t * 1.2) * .0015;
+  const glow = .36 + energy * .18 + (talking ? .1 : 0);
+  ctx.globalCompositeOperation = 'lighter';
+
+  drawExactFacePath([[.345,.287],[.385,.276 + lift],[.43,.285]], rect, glow, .0022, 'cyan');
+  drawExactFacePath([[.498,.296],[.538,.286 - lift],[.575,.296]], rect, glow * .9, .0021, 'cyan');
+  drawExactFacePath([[.36,.249 - lift],[.415,.239 - lift],[.462,.252]], rect, .22 + energy * .1, .0017, 'orange');
+  drawExactFacePath([[.5,.256],[.545,.246 + lift],[.588,.26 + lift]], rect, .2 + energy * .09, .0016, 'orange');
+
+  drawExactFacePath([[.462,.305],[.477,.35],[.466,.385],[.436,.41]], rect, .3 + energy * .12, .0018, 'cyan');
+  drawExactFacePath([[.35,.408],[.407,.427],[.478,.424],[.544,.4]], rect, .24 + energy * .08, .0014, 'cyan');
+
+  const eyeDots = [
+    [.389,.282,.012],
+    [.526,.29,.01]
+  ];
+  for(const dot of eyeDots){
+    const x = rect.x + rect.w * dot[0];
+    const y = rect.y + rect.h * (dot[1] + lift);
+    const r = rect.w * dot[2] * (1 + energy * .18);
+    const halo = ctx.createRadialGradient(x, y, 0, x, y, r * 2.8);
+    halo.addColorStop(0, `rgba(135,238,255,${.32 + energy * .2})`);
+    halo.addColorStop(.5, `rgba(70,205,255,${.12 + energy * .1})`);
+    halo.addColorStop(1, 'rgba(70,205,255,0)');
+    ctx.fillStyle = halo;
+    ctx.beginPath();
+    ctx.ellipse(x, y, r * 2.2, r * 1.1, 0, 0, Math.PI * 2);
+    ctx.fill();
+  }
+}
+
+function drawExactGlowDot(rect, nx, ny, rx, ry, rgb, alpha){
+  const x = rect.x + rect.w * nx;
+  const y = rect.y + rect.h * ny;
+  const r = rect.w * rx;
+  const glow = ctx.createRadialGradient(x, y, 0, x, y, r * 2.8);
+  glow.addColorStop(0, `rgba(${rgb},${alpha})`);
+  glow.addColorStop(.42, `rgba(${rgb},${alpha * .32})`);
+  glow.addColorStop(1, `rgba(${rgb},0)`);
+  ctx.fillStyle = glow;
+  ctx.beginPath();
+  ctx.arc(x, y, Math.max(1.2, r), 0, Math.PI * 2);
+  ctx.fill();
+}
+
+function drawExactSoftStroke(rect, points, rgb, alpha, width){
+  ctx.strokeStyle = `rgba(${rgb},${alpha})`;
+  ctx.lineWidth = Math.max(.65, rect.w * width);
+  ctx.lineCap = 'round';
+  ctx.lineJoin = 'round';
+  ctx.beginPath();
+  for(let i = 0; i < points.length; i++){
+    const p = points[i];
+    const x = rect.x + rect.w * p[0];
+    const y = rect.y + rect.h * p[1];
+    if(i === 0) ctx.moveTo(x, y);
+    else if(p.length > 2){
+      ctx.quadraticCurveTo(rect.x + rect.w * p[2], rect.y + rect.h * p[3], x, y);
+    }else{
+      ctx.lineTo(x, y);
+    }
+  }
+  ctx.stroke();
+}
+
+function drawExactBodyHeat(t, rect){
+  ctx.globalCompositeOperation = 'lighter';
+  const pulse = 1 + Math.sin(t * 4.6) * .06 + energy * .22;
+  const cx = rect.x + rect.w * .49;
+  const cy = rect.y + rect.h * .61;
+  const glow = ctx.createRadialGradient(cx, cy, 0, cx, cy, rect.w * .2 * pulse);
+  glow.addColorStop(0, `rgba(255,176,55,${.055 + energy * .08})`);
+  glow.addColorStop(.38, `rgba(255,132,28,${.025 + energy * .05})`);
+  glow.addColorStop(1, 'rgba(255,132,28,0)');
+  ctx.fillStyle = glow;
+  ctx.beginPath();
+  ctx.ellipse(cx, cy, rect.w * .18 * pulse, rect.h * .14 * pulse, 0, 0, Math.PI * 2);
+  ctx.fill();
+}
+
+function drawExactFaceGlow(t, rect){
+  ctx.globalCompositeOperation = 'lighter';
+  const talking = phase === 'speaking';
+  const pulse = .82 + energy * .35 + (talking ? Math.max(0, Math.sin(t * 14)) * .22 : 0);
+  const float = Math.sin(t * 1.5) * .003;
+
+  drawExactGlowDot(rect, .39, .286 + float, .0075, .004, '115,232,255', .34 * pulse);
+  drawExactGlowDot(rect, .526, .292 - float * .6, .0085, .004, '125,238,255', .42 * pulse);
+  drawExactGlowDot(rect, .463, .35, .0045, .003, '255,174,62', .12 * pulse);
+  drawExactGlowDot(rect, .457, .386, .0048, .003, '255,174,62', .13 * pulse);
+  drawExactGlowDot(rect, .417, .414, .009, .003, '104,230,255', .12 * pulse);
+}
+
+function drawExactImageLinks(t, rect, yaw){
+  ctx.globalCompositeOperation = 'lighter';
+  ctx.lineCap = 'round';
+  const linkLimit = Math.min(exactSignalLinks.length, Math.floor(440 + energy * 560));
+  for(let i = 0; i < linkLimit; i++){
+    const link = exactSignalLinks[i];
+    if(phase !== 'speaking' && i % 3 === 0) continue;
+    const pa = exactAvatarParticles[link[0]];
+    const pb = exactAvatarParticles[link[1]];
+    const a = exactPoint(pa, rect, t, yaw);
+    const b = exactPoint(pb, rect, t, yaw);
+    const front = (a.front + b.front) * .5;
+    const flicker = .52 + Math.sin(t * .45 + link[2] * 9) * .03;
+    const rgb = pa.warm || pb.warm ? '255,158,45' : '86,220,255';
+    ctx.strokeStyle = `rgba(${rgb},${(.032 + energy * .035 + flicker * .012) * (.45 + front * .75)})`;
+    ctx.lineWidth = (.22 + link[2] * .34) * (.7 + front * 1.1);
+    ctx.beginPath();
+    ctx.moveTo(a.x, a.y);
+    ctx.lineTo(b.x, b.y);
+    ctx.stroke();
+  }
+}
+
+function drawExactAvatar(t){
+  const rect = exactScreenRect();
+  const talking = phase === 'speaking';
+  const yaw = Math.sin(t * .42) * .075 + (talking ? Math.sin(t * 1.6) * .008 : 0);
+  const pulse = 1 + energy * .055 + (talking ? Math.max(0, Math.sin(t * 10)) * .008 : 0);
+
+  ctx.globalCompositeOperation = 'lighter';
+
+  const ambient = ctx.createRadialGradient(W*.5, rect.y + rect.h*.48, 0, W*.5, rect.y + rect.h*.48, rect.w*.75);
+  ambient.addColorStop(0, `rgba(60,190,255,${.16 + energy*.09})`);
+  ambient.addColorStop(.52, `rgba(255,146,35,${.07 + energy*.055})`);
+  ambient.addColorStop(1, 'rgba(0,0,0,0)');
+  ctx.fillStyle = ambient;
+  ctx.beginPath();
+  ctx.ellipse(W*.5, rect.y + rect.h*.48, rect.w*.72, rect.h*.48, 0, 0, Math.PI*2);
+  ctx.fill();
+
+  drawExactPlatform(t, rect, false);
+  drawExactScanRings(t, rect);
+  drawExactOrbitField(t, rect, yaw, false);
+  drawExactBodyHeat(t, rect);
+  drawExactImageLinks(t, rect, yaw);
+
+  const sorted = exactAvatarParticles.slice().sort((a,b) => a.z - b.z);
+  for(const p of sorted){
+    const q = exactPoint(p, rect, t, yaw);
+    const size = p.s * q.scale * pulse * (p.layer === 'head' ? 1.12 : 1.02);
+    const sparkle = p.spark > .997 ? .035 + Math.max(0, Math.sin(t * 2.2 + p.drift)) * .055 : 0;
+    const alpha = Math.min(1, p.a * (.58 + q.front * .48 + energy * .1 + sparkle));
+    ctx.fillStyle = `rgba(${p.r},${p.g},${p.b},${alpha})`;
+    ctx.beginPath();
+    ctx.arc(q.x, q.y, size, 0, Math.PI * 2);
+    ctx.fill();
+  }
+
+  drawExactOrbitField(t, rect, yaw, true);
+  drawExactExpression(t, rect);
+  drawExactPlatform(t, rect, true);
+}
+
+function drawExactExpression(t, rect){
+  const talking = phase === 'speaking';
+  if(!talking) return;
+  drawExactMouth(t, rect);
+}
+
+function drawExactMouth(t, rect){
+  const talking = phase === 'speaking';
+  if(!talking) return;
+  const mx = rect.x + rect.w * .405;
+  const my = rect.y + rect.h * .402;
+  const mw = rect.w * .115;
+  const open = talking
+    ? rect.h * (.005 + Math.max(0, Math.sin(t * 18)) * .02 + Math.max(0, Math.sin(t * 31 + .8)) * .011)
+    : rect.h * (.002 + Math.max(0, Math.sin(t * 1.7)) * .001);
+  const sideTalk = talking ? Math.sin(t * 14) * rect.w * .006 : 0;
+  const upper = [
+    [mx - mw*.52 - sideTalk, my],
+    [mx - mw*.12, my - rect.h*.005],
+    [mx + mw*.18, my - rect.h*.004],
+    [mx + mw*.52 + sideTalk, my + rect.h*.002]
+  ];
+  const lower = [
+    [mx - mw*.48 - sideTalk * .6, my + open],
+    [mx - mw*.08, my + open + rect.h*.006],
+    [mx + mw*.2, my + open + rect.h*.005],
+    [mx + mw*.48 + sideTalk * .6, my + open]
+  ];
+
+  ctx.save();
+  ctx.globalCompositeOperation = 'lighter';
+  ctx.lineCap = 'round';
+  ctx.lineJoin = 'round';
+  ctx.shadowBlur = rect.w * .012;
+  ctx.shadowColor = 'rgba(94,230,255,.62)';
+  ctx.strokeStyle = `rgba(105,230,255,${.5 + energy * .18})`;
+  ctx.lineWidth = Math.max(1, rect.w * .0022);
+  ctx.beginPath();
+  upper.forEach((p,i) => i ? ctx.lineTo(p[0],p[1]) : ctx.moveTo(p[0],p[1]));
+  ctx.stroke();
+
+  ctx.strokeStyle = `rgba(120,238,255,${.38 + energy * .14})`;
+  ctx.lineWidth = Math.max(.85, rect.w * .0018);
+  ctx.beginPath();
+  lower.forEach((p,i) => i ? ctx.lineTo(p[0],p[1]) : ctx.moveTo(p[0],p[1]));
+  ctx.stroke();
+
+  ctx.strokeStyle = `rgba(130,244,255,${.24 + energy * .1})`;
+  ctx.lineWidth = Math.max(.65, rect.w * .0012);
+  ctx.beginPath();
+  ctx.moveTo(mx - mw * .2, my + open * .42);
+  ctx.quadraticCurveTo(mx, my + open * .58, mx + mw * .22, my + open * .42);
+  ctx.stroke();
+  ctx.restore();
+}
+
+function drawFrame(ms){
+  const t = ms * .001;
+  energy += (targetEnergy - energy) * .045;
+  const cx = W * .5;
+  const cy = H * .56;
+  const base = Math.min(W,H) * (1.1 + energy * .035);
+  ctx.clearRect(0,0,W,H);
+
+  ctx.globalCompositeOperation = 'source-over';
+  const shade = ctx.createLinearGradient(0,0,W,H);
+  shade.addColorStop(0,'rgba(70,180,255,.045)');
+  shade.addColorStop(.48,'rgba(0,0,0,0)');
+  shade.addColorStop(1,'rgba(255,138,32,.05)');
+  ctx.fillStyle = shade;
+  ctx.fillRect(0,0,W,H);
+
+  drawBackground(t);
+  if(exactAvatarReady){
+    drawExactAvatar(t);
+  }else{
+    drawPlatform(t, base, cx, cy);
+    drawHeadGrid(t, base, cx, cy);
+    drawTorsoLines(t, base, cx, cy);
+    drawNodesAndLinks(t, base, cx, cy);
+    drawChestCore(t, base, cx, cy);
+    drawFace(t, base, cx, cy);
+  }
+
+  ctx.globalCompositeOperation = 'source-over';
+  requestAnimationFrame(drawFrame);
+}
+requestAnimationFrame(drawFrame);
+
+function answerPulse(text){
+  clearTimeout(speakingTimer);
+  setPhase('speaking', 'JARVIS ANTWORTET');
+  const duration = Math.max(1600, Math.min(6200, 1000 + String(text).length * 24));
+  speechHoldUntil = Date.now() + duration;
+  speakingTimer = setTimeout(() => setPhase('idle', 'JARVIS BEREIT'), duration);
+}
+
+async function sendCommand(raw){
+  const visible = raw.trim();
+  if(!visible) return;
+  const command = /^jarvis\b/i.test(visible) ? visible : `Jarvis, ${visible}`;
+  logLine('DU', visible);
+  taskRunning = true;
+  setPhase('thinking', 'JARVIS DENKT');
+  try{
+    const res = await fetch(`${API_BASE}/api/chat`, {
+      method:'POST',
+      headers:{'content-type':'application/json'},
+      body:JSON.stringify({command, chat_id:selectedChatId || activeChatId || ''})
+    });
+    const data = await res.json();
+    if(data.chat_id){
+      activeChatId = data.chat_id;
+      selectedChatId = data.chat_id;
+    }
+    const answer = data.answer || 'OK';
+    if(/aufgabe gestartet/i.test(answer)){
+      logLine('JARVIS', answer);
+      setWork('Aufgabe läuft', 'Jarvis arbeitet im Hintergrund');
+    }else{
+      setWork('Antwort fertig', 'Antwort steht im Chat');
+    }
+    if(!/aufgabe gestartet/i.test(answer)){
+      taskRunning = false;
+      setPhase('idle', 'JARVIS FERTIG');
+    }
+    loadChats(selectedChatId);
+  }catch(err){
+    taskRunning = false;
+    logLine('SYSTEM', 'Verbindungfehler: ' + err);
+    setPhase('idle', 'JARVIS BEREIT');
+  }
+}
+
+document.getElementById('commandForm').addEventListener('submit', event => {
+  event.preventDefault();
+  const input = document.getElementById('cmd');
+  const value = input.value;
+  input.value = '';
+  sendCommand(value);
+});
+
+async function pollEvents(){
+  try{
+    const res = await fetch(`${API_BASE}/api/events`);
+    const data = await res.json();
+    for(const ev of data.events || []){
+      if(ev.kind === 'heard'){
+        logLine('ERKANNT', ev.text);
+        if(!taskRunning) setPhase('listening', 'JARVIS HÖRT ZU');
+        setWork('Sprache erkannt', ev.text);
+      }else if(ev.kind === 'answer'){
+        taskRunning = false;
+        logLine('JARVIS', 'Antwort fertig');
+        setWork('Antwort fertig', 'Antwort steht im Chat');
+        loadChats(selectedChatId || activeChatId);
+      }else if(ev.kind === 'system'){
+        logLine('SYSTEM', ev.text);
+        if(/fehler|nicht erreichbar|bereit|gestartet/i.test(ev.text || '')) setWork('System', ev.text);
+      }else if(ev.kind === 'drop'){
+        const dropText = String(ev.text || '').trim();
+        if(dropText){
+          logLine('DROP', dropText);
+          setWork('Drop aktiv', dropText);
+          setPhase('reading', 'DATEI/ORDNER ERKANNT');
+        }else{
+          setWork('Chat ohne Ordner', 'Kein Arbeitsordner aktiv');
+          if(!taskRunning) setPhase('idle', 'CHAT OHNE ORDNER');
+        }
+      }else if(ev.kind === 'phase'){
+        const parts = String(ev.text || '').split('|');
+        const nextPhase = parts[0] || 'thinking';
+        const label = parts[1] || 'JARVIS ARBEITET';
+        const detail = parts.slice(2).join('|');
+        if(nextPhase !== 'idle' && nextPhase !== 'listening') taskRunning = true;
+        setPhase(nextPhase, label);
+        setWork(label, detail);
+        logLine('AKTION', label);
+      }else if(ev.kind === 'speaking'){
+        if(ev.text === '1') setPhase('speaking', 'JARVIS ANTWORTET');
+        if(ev.text === '0' && phase === 'speaking' && Date.now() > speechHoldUntil){
+          setTimeout(() => setPhase('idle', 'JARVIS BEREIT'), 900);
+        }
+      }
+    }
+  }catch(err){}
+  setTimeout(pollEvents, 450);
+}
+pollEvents();
+
+document.getElementById('closeApp').addEventListener('click', async () => {
+  try{ await fetch(`${API_BASE}/api/quit`, {method:'POST'}); }catch(err){}
+});
+
+document.addEventListener('keydown', event => {
+  if(event.key === 'Escape'){
+    fetch('/api/quit', {method:'POST'}).catch(() => {});
+  }
+});
+
+setInterval(() => {
+  document.getElementById('clock').textContent = new Date().toLocaleTimeString('de-DE');
+}, 500);
+setPhase('idle', 'JARVIS BEREIT');
+setWork('Warte auf Befehl', 'Sag oder schreibe einfach was Jarvis machen soll');
+loadChats();
+</script>
+</body>
+</html>

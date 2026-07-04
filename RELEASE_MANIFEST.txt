@@ -1,0 +1,14 @@
+﻿Orange Jarvis Ultra Release
+Mode: Github
+Created: 2026-07-04T09:09:21
+
+Excluded private files:
+- .env and .env backups
+- chat history
+- sqlite memory files
+- logs
+- browser profiles
+- generated user projects
+
+Github mode excludes heavy AI runtimes and models.
+Full mode includes external runtimes and models where present.

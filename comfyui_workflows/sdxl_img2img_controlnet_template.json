@@ -1,0 +1,10 @@
+{
+  "note": "ComfyUI Pro Vorlage: SDXL img2img + ControlNet. In ComfyUI öffnen und Nodes/Modelle verbinden.",
+  "workflow_type": "SDXL img2img ControlNet",
+  "recommended": {
+    "checkpoint_folder": "external/ComfyUI/models/checkpoints",
+    "controlnet_folder": "external/ComfyUI/models/controlnet",
+    "denoise": 0.45,
+    "use_case": "Bild verändern, Pose/Struktur halten"
+  }
+}

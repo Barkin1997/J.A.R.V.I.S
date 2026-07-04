@@ -1,0 +1,1 @@
+find . -type f -printf '%T@ %p\n' | sort -nr | head -n 20 | cut -d' ' -f2-

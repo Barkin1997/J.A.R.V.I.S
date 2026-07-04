@@ -1,0 +1,40 @@
+{
+  "folders": [
+    {
+      "name": "Jarvis",
+      "path": "."
+    }
+  ],
+  "settings": {
+    "python.defaultInterpreterPath": "${workspaceFolder:Jarvis}\\.venv\\Scripts\\python.exe",
+    "roo-cline.autoImportSettingsPath": "E:\\J.A.R.V.I.S\\orange_jarvis_ultra_last_procontrol_easyname\\.roo\\roo-code-settings.json",
+    "roo-cline.apiRequestTimeout": 600000,
+    "roo-cline.useAgentRules": true,
+    "files.exclude": {
+      "**/__pycache__": true,
+      "**/.aider.tags.cache.v4": true,
+      "**/data/browser_profile": true,
+      "**/external": true,
+      "**/models": true,
+      "**/logs": true,
+      "**/codex_backups": true,
+      "**/project_backups": true,
+      "**/sandbox_runs": true
+    },
+    "search.exclude": {
+      "**/data": true,
+      "**/external": true,
+      "**/models": true,
+      "**/logs": true,
+      "**/codex_backups": true,
+      "**/project_backups": true,
+      "**/sandbox_runs": true,
+      "**/Jarvis_Projects": true
+    }
+  },
+  "extensions": {
+    "recommendations": [
+      "rooveterinaryinc.roo-cline"
+    ]
+  }
+}

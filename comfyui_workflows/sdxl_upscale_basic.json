@@ -1,0 +1,9 @@
+{
+  "note": "Upscale-Vorlage. In ComfyUI öffnen und mit Upscaler-Modell verbinden.",
+  "workflow_type": "SDXL upscale",
+  "recommended": {
+    "upscale": "2x",
+    "denoise": 0.25,
+    "use_case": "KI-Bilder nachschärfen und vergrößern"
+  }
+}

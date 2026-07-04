@@ -1,0 +1,12 @@
+{
+  "workflow_name": "Jarvis KI Video Prompt Template",
+  "type": "template",
+  "default_settings": {
+    "seconds": 4,
+    "fps": 16,
+    "width": 1024,
+    "height": 576,
+    "positive_prompt": "futuristic orange Jarvis robot, cinematic smooth motion, glowing AI core, black background, high detail",
+    "negative_prompt": "low quality, blurry, flicker, watermark, deformed, distorted"
+  }
+}

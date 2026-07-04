@@ -1,0 +1,169 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>JARVIS Arbeitet Live</title>
+<style>
+:root{--bg:#05080d;--panel:#0a1420;--line:#256b8d;--cyan:#67d8ff;--orange:#ff9a28;--green:#34ffad;--text:#edfaff}
+*{box-sizing:border-box}
+html,body{margin:0;min-height:100%;background:linear-gradient(180deg,#05080d,#07131d 55%,#020407);color:var(--text);font-family:"Segoe UI",Arial,sans-serif}
+body{padding:28px}
+.shell{max-width:1180px;margin:0 auto}
+.top{display:flex;align-items:flex-start;justify-content:space-between;gap:18px;margin-bottom:22px}
+h1{margin:0;color:#fff;font-size:34px;letter-spacing:0}
+.sub{margin-top:7px;color:#9fc5d9;font-weight:700}
+.badge{border:1px solid rgba(103,216,255,.36);background:rgba(6,20,32,.74);padding:10px 14px;border-radius:6px;color:#bfeeff;font-weight:900;white-space:nowrap}
+.grid{display:grid;grid-template-columns:1fr 360px;gap:18px}
+.card{border:1px solid rgba(103,216,255,.28);background:linear-gradient(180deg,rgba(10,22,34,.88),rgba(5,12,20,.92));border-radius:8px;box-shadow:0 0 30px rgba(103,216,255,.08);padding:20px}
+.status{display:flex;align-items:center;gap:14px;margin-bottom:18px}
+.pulse{width:14px;height:14px;border-radius:50%;background:var(--green);box-shadow:0 0 22px var(--green)}
+.statusText{font-size:22px;font-weight:950;color:#ffdca0}
+.detail{color:#cfefff;font-size:15px;line-height:1.55;word-break:break-word}
+.bar{height:10px;background:rgba(103,216,255,.12);border-radius:999px;overflow:hidden;margin:18px 0}
+.bar span{display:block;height:100%;width:12%;background:linear-gradient(90deg,var(--cyan),var(--orange));box-shadow:0 0 20px rgba(255,154,40,.5);transition:width .35s}
+.steps{display:grid;gap:10px;margin-top:16px}
+.step{border:1px solid rgba(103,216,255,.18);background:rgba(2,10,18,.48);border-radius:6px;padding:12px 14px;color:#b8d7e8;font-weight:700}
+.step.active{border-color:rgba(255,154,40,.55);color:#ffe3b7;background:rgba(255,154,40,.08)}
+.sideLabel{color:#86aabd;font-size:12px;font-weight:900;margin-bottom:8px}
+.timer{font-size:44px;font-weight:950;color:#67d8ff;text-shadow:0 0 20px rgba(103,216,255,.35)}
+.log{font-family:Consolas,"Cascadia Mono",monospace;font-size:13px;line-height:1.55;max-height:420px;overflow:auto;color:#c8e0ec}
+.log div{padding:4px 0;border-bottom:1px solid rgba(103,216,255,.08)}
+.tag{color:#ffd36d;font-weight:900}
+.result{white-space:pre-wrap;max-height:260px;overflow:auto;color:#dff6ff;background:rgba(1,7,13,.52);border:1px solid rgba(103,216,255,.18);border-radius:6px;padding:12px;font-family:Consolas,"Cascadia Mono",monospace;font-size:12px}
+@media(max-width:900px){body{padding:18px}.grid{grid-template-columns:1fr}.top{display:block}.badge{display:inline-block;margin-top:14px}h1{font-size:28px}}
+</style>
+</head>
+<body>
+<main class="shell">
+  <div class="top">
+    <div>
+      <h1>JARVIS ARBEITET LIVE</h1>
+      <div class="sub" id="commandText">Warte auf Aufgabe</div>
+    </div>
+    <div class="badge" id="modelText">qwen3-coder-next:latest</div>
+  </div>
+
+  <div class="grid">
+    <section class="card">
+      <div class="status">
+        <div class="pulse" id="pulse"></div>
+        <div class="statusText" id="statusText">Bereit</div>
+      </div>
+      <div class="detail" id="detailText">Wenn Jarvis arbeitet, erscheint hier jeder Schritt live.</div>
+      <div class="bar"><span id="progressBar"></span></div>
+      <div class="steps" id="steps"></div>
+      <div class="sideLabel" style="margin-top:18px">ERGEBNIS</div>
+      <div class="result" id="resultText">Noch kein Ergebnis.</div>
+    </section>
+
+    <aside class="card">
+      <div class="sideLabel">LAUFZEIT</div>
+      <div class="timer" id="timer">0s</div>
+      <div class="sideLabel" style="margin-top:22px">LIVE PROTOKOLL</div>
+      <div class="log" id="log"></div>
+    </aside>
+  </div>
+</main>
+
+<script>
+const API_BASE = location.protocol === 'file:' ? 'http://127.0.0.1:8765' : '';
+const commandText = document.getElementById('commandText');
+const statusText = document.getElementById('statusText');
+const detailText = document.getElementById('detailText');
+const resultText = document.getElementById('resultText');
+const progressBar = document.getElementById('progressBar');
+const timer = document.getElementById('timer');
+const stepsEl = document.getElementById('steps');
+const logEl = document.getElementById('log');
+let lastTime = 0;
+let currentElapsed = 0;
+let stepCount = 0;
+let active = false;
+
+function escapeHtml(value){
+  return String(value).replace(/[<>&]/g, char => ({'<':'&lt;','>':'&gt;','&':'&amp;'}[char]));
+}
+
+function log(tag, text){
+  const div = document.createElement('div');
+  div.innerHTML = `<span class="tag">${escapeHtml(tag)} &gt;</span> ${escapeHtml(text)}`;
+  logEl.appendChild(div);
+  logEl.scrollTop = logEl.scrollHeight;
+}
+
+function addStep(text, activeStep=true){
+  const div = document.createElement('div');
+  div.className = 'step' + (activeStep ? ' active' : '');
+  div.textContent = text;
+  for(const node of stepsEl.children) node.classList.remove('active');
+  stepsEl.appendChild(div);
+  while(stepsEl.children.length > 9) stepsEl.removeChild(stepsEl.firstChild);
+}
+
+function setProgress(elapsed, text){
+  active = true;
+  currentElapsed = elapsed;
+  stepCount += 1;
+  timer.textContent = `${elapsed}s`;
+  statusText.textContent = 'Jarvis arbeitet';
+  detailText.textContent = text;
+  progressBar.style.width = Math.min(92, 10 + stepCount * 10) + '%';
+  addStep(text);
+  log('SCHRITT', `${elapsed}s - ${text}`);
+}
+
+function finish(status, answer){
+  active = false;
+  statusText.textContent = status === 'FEHLER' ? 'Fertig mit Fehler' : 'Fertig';
+  detailText.textContent = status === 'FEHLER' ? 'Jarvis hat einen Fehler gemeldet.' : 'Jarvis hat den Auftrag abgeschlossen.';
+  progressBar.style.width = '100%';
+  resultText.textContent = answer || 'Fertig.';
+  addStep(status === 'FEHLER' ? 'Fehler angezeigt' : 'Ergebnis angezeigt', false);
+  log(status, (answer || '').slice(0, 500));
+}
+
+async function poll(){
+  try{
+    const res = await fetch(`${API_BASE}/api/work_events?since=${lastTime}`);
+    const data = await res.json();
+    for(const ev of data.events || []){
+      lastTime = Math.max(lastTime, Number(ev.time || 0));
+      if(ev.kind === 'work_reset'){
+        const parts = String(ev.text || '').split('|');
+        commandText.textContent = parts.slice(1).join('|') || 'Aufgabe gestartet';
+        stepsEl.innerHTML = '';
+        resultText.textContent = 'Jarvis arbeitet...';
+        progressBar.style.width = '8%';
+        stepCount = 0;
+        active = true;
+        log('START', commandText.textContent);
+      }else if(ev.kind === 'work_step'){
+        const parts = String(ev.text || '').split('|');
+        setProgress(Number(parts[0] || 0), parts.slice(1).join('|') || 'Arbeite...');
+      }else if(ev.kind === 'work_done'){
+        const parts = String(ev.text || '').split('|');
+        finish(parts[0] || 'FERTIG', parts.slice(1).join('|'));
+      }else if(ev.kind === 'answer' && active){
+        resultText.textContent = ev.text || '';
+      }else if(ev.kind === 'system'){
+        log('SYSTEM', ev.text);
+      }
+    }
+  }catch(err){
+    log('SYSTEM', 'Keine Verbindung zu Jarvis: ' + err);
+  }
+  setTimeout(poll, 600);
+}
+
+setInterval(() => {
+  if(active){
+    currentElapsed += 1;
+    timer.textContent = `${currentElapsed}s`;
+  }
+}, 1000);
+
+poll();
+</script>
+</body>
+</html>

@@ -1,0 +1,9 @@
+{
+  "note": "Basis-Vorlage. In ComfyUI öffnen und Checkpoint/Prompt anpassen.",
+  "workflow_type": "SDXL txt2img",
+  "recommended": {
+    "checkpoint_folder": "external/ComfyUI/models/checkpoints",
+    "positive_prompt": "futuristic orange black Jarvis robot, cinematic lighting, detailed, sharp",
+    "negative_prompt": "low quality, blurry, watermark, text"
+  }
+}

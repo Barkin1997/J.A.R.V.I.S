@@ -1,0 +1,9 @@
+{
+  "note": "Logo-Modus Vorlage. In ComfyUI öffnen und mit SDXL/ControlNet nachbauen.",
+  "workflow_type": "Logo Mode",
+  "recommended": {
+    "positive_prompt": "clean vector logo, orange black, futuristic, minimal, high contrast",
+    "negative_prompt": "photo, blurry, low quality, watermark, text errors",
+    "size": "1024x1024"
+  }
+}
