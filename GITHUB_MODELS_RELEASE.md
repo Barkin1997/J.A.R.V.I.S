@@ -44,7 +44,14 @@ Wenn alles hochgeladen ist, auf GitHub die Release pruefen und veroeffentlichen.
 ## Nutzer installieren Full-Paket
 
 Sobald die Release veroeffentlicht ist, koennen Nutzer die Modellteile
-automatisch laden:
+automatisch installieren:
+
+```powershell
+cd "C:\JARVIS"
+.\INSTALL_MODELS_FROM_GITHUB.bat
+```
+
+Oder nur herunterladen:
 
 ```powershell
 cd "C:\JARVIS"

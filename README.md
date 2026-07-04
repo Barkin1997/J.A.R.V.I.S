@@ -78,6 +78,7 @@ vorbereitet.
 
 - Deutsche Anleitung: `INSTALLATION_DE.md`
 - English guide: `INSTALLATION_EN.md`
+- Modelle automatisch installieren: `INSTALL_MODELS_FROM_GITHUB.bat`
 - Modell-Download: `MODEL_DOWNLOAD_INFO.md`
 - GitHub-Release fuer Modelle: `GITHUB_MODELS_RELEASE.md`
 

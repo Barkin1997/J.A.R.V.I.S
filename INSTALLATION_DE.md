@@ -51,8 +51,17 @@ ollama pull qwen3-coder-next:latest
 Die grossen KI-Modelle sind nicht im normalen GitHub-Code-ZIP. Sie werden als
 GitHub Release heruntergeladen.
 
-Wenn die Release `jarvis-full-models-20260704` sichtbar ist, lade die Modellteile
-so herunter:
+Einfachste Variante:
+
+```powershell
+cd C:\JARVIS
+.\INSTALL_MODELS_FROM_GITHUB.bat
+```
+
+Das Skript laedt alle Modellteile automatisch von GitHub, setzt sie zusammen und
+kopiert die Modellordner an die richtige Stelle.
+
+Manuelle Variante:
 
 ```powershell
 cd C:\JARVIS
@@ -66,6 +75,8 @@ C:\JARVIS_MODEL_PARTS
 ```
 
 ## 6. Full-Paket wiederherstellen
+
+Nur noetig, wenn du die manuelle Variante nutzt:
 
 ```powershell
 cd C:\JARVIS

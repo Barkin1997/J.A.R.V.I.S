@@ -50,8 +50,17 @@ ollama pull qwen3-coder-next:latest
 The large AI models are not inside the normal GitHub source ZIP. They are
 distributed as GitHub Release assets.
 
-When the release `jarvis-full-models-20260704` is visible, download all model
-parts like this:
+Easy mode:
+
+```powershell
+cd C:\JARVIS
+.\INSTALL_MODELS_FROM_GITHUB.bat
+```
+
+This downloads all model parts from GitHub, restores the package, and copies the
+model folders into the right place.
+
+Manual mode:
 
 ```powershell
 cd C:\JARVIS
@@ -59,6 +68,8 @@ python tools\download_full_release_assets.py --out C:\JARVIS_MODEL_PARTS
 ```
 
 ## 6. Restore the full package
+
+Only needed when using manual mode:
 
 ```powershell
 cd C:\JARVIS
